@@ -62,7 +62,7 @@ int main()
     unsigned long int max_fila = 0;
 
     /*
-    Little
+    Little -> E[n] = lambda * E[w] -> média de quantidade de requisicoes dentro do sistema = taxa de chegada * media do tempo de espera dentro do sistema
     */
 
     little e_n;
