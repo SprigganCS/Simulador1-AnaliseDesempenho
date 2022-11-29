@@ -152,6 +152,8 @@ int resolve(float a)
         }
 		else{
 			//coleta dados
+			printf("%lF\n", tempo_decorrido);
+			coleta+=100;
 			//se entrar nesse caso a variavel de coleta deve ser atualizada para +100
 		}
     }
