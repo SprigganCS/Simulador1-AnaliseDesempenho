@@ -129,7 +129,7 @@ int resolve(float a)
             e_w_chegada.no_eventos++;
             // little
         }
-        else if(tempo_decorrido == servico)
+		else if(tempo_decorrido == servico)
         { // saida
             // printf("Saida em %lF.\n", tempo_decorrido);
             fila--;
@@ -152,29 +152,30 @@ int resolve(float a)
         }
 		else{
 			//coleta dados
-			printf("%lF\n", tempo_decorrido);
+			printf("\nTempo de coleta: %lF\n", tempo_decorrido);
+			e_n.soma_areas += (tempo_decorrido - e_n.tempo_anterior) * e_n.no_eventos;
+    		e_w_chegada.soma_areas += (tempo_decorrido - e_w_chegada.tempo_anterior) * e_w_chegada.no_eventos;
+    		e_w_saida.soma_areas += (tempo_decorrido - e_w_saida.tempo_anterior) * e_w_saida.no_eventos;
+
+    		double e_n_final = e_n.soma_areas / tempo_decorrido;
+    		double e_w_final = (e_w_chegada.soma_areas - e_w_saida.soma_areas) / e_w_chegada.no_eventos;
+    		double lambda = e_w_chegada.no_eventos / tempo_decorrido;
+
+    		printf("\n");
+    		printf("E[N] = %lF\n", e_n_final); //tamanho medio de fila
+    		printf("E[W] = %lF\n", e_w_final); //tempo medio de espera
+    		printf("Lambda = %lF\n", lambda);  //pessoas que chegam por segundo
+
+    		printf("Erro de Little: %.20lF\n\n", e_n_final - lambda * e_w_final);
+
+    		printf("Ocupacao: %lF.\n", soma_tempo_servico / maximo(tempo_decorrido, servico));
+    		printf("Max fila: %ld.\n", max_fila);
 			coleta+=100;
 			//se entrar nesse caso a variavel de coleta deve ser atualizada para +100
 		}
     }
 
-    e_n.soma_areas += (tempo_decorrido - e_n.tempo_anterior) * e_n.no_eventos;
-    e_w_chegada.soma_areas += (tempo_decorrido - e_w_chegada.tempo_anterior) * e_w_chegada.no_eventos;
-    e_w_saida.soma_areas += (tempo_decorrido - e_w_saida.tempo_anterior) * e_w_saida.no_eventos;
-
-    double e_n_final = e_n.soma_areas / tempo_decorrido;
-    double e_w_final = (e_w_chegada.soma_areas - e_w_saida.soma_areas) / e_w_chegada.no_eventos;
-    double lambda = e_w_chegada.no_eventos / tempo_decorrido;
-
-    printf("\n");
-    printf("E[N] = %lF\n", e_n_final); //tamanho medio de fila
-    printf("E[W] = %lF\n", e_w_final); //tempo medio de espera
-    printf("Lambda = %lF\n", lambda);  //pessoas que chegam por segundo
-
-    printf("Erro de Little: %.20lF\n\n", e_n_final - lambda * e_w_final);
-
-    printf("Ocupacao: %lF.\n", soma_tempo_servico / maximo(tempo_decorrido, servico));
-    printf("Max fila: %ld.\n", max_fila);
+    
 
     return 0;
 }
