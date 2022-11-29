@@ -124,7 +124,7 @@ int resolve(float a)
             e_n.tempo_anterior = tempo_decorrido;
             e_n.no_eventos++;
 
-            e_w_chegada.soma_areas += (tempo_decorrido - e_w_chegada.tempo_anterior) * e_w_chegada.no_eventos;
+            e_w_chegada.soma_areas += (tempo_decorrido - e_w_chegada.tempo_anterior) * e_w_chegada.no_eventos; //primeira iteração da 0
             e_w_chegada.tempo_anterior = tempo_decorrido;
             e_w_chegada.no_eventos++;
             // little
@@ -157,6 +157,11 @@ int resolve(float a)
     		e_w_chegada.soma_areas += (tempo_decorrido - e_w_chegada.tempo_anterior) * e_w_chegada.no_eventos;
     		e_w_saida.soma_areas += (tempo_decorrido - e_w_saida.tempo_anterior) * e_w_saida.no_eventos;
 
+			e_w_saida.tempo_anterior = tempo_decorrido;
+			e_n.tempo_anterior = tempo_decorrido;
+			e_w_chegada.tempo_anterior = tempo_decorrido;
+
+			
     		double e_n_final = e_n.soma_areas / tempo_decorrido;
     		double e_w_final = (e_w_chegada.soma_areas - e_w_saida.soma_areas) / e_w_chegada.no_eventos;
     		double lambda = e_w_chegada.no_eventos / tempo_decorrido;
