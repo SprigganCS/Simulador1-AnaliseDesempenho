@@ -86,7 +86,7 @@ int resolve(float a)
 
     //printf("Informe o intervalo medio entre chegadas (segundos): ");
     //scanf("%lF", &intervalo_medio_chegada);
-    intervalo_medio_chegada = 5;
+    intervalo_medio_chegada = 0.2;
 
     //printf("Informe o tempo medio de servico (segundos): ");
     //scanf("%lF", &tempo_medio_servico);   
@@ -193,7 +193,7 @@ int resolve(float a)
 
 
 int main(){
-    float taxas[] = {4, 4.5, 4.75, 4.95};
+    float taxas[] = {0.16, 0.18, 0.19, 0.198};
     for(int i=0; i<4; i++){
         resolve(taxas[i]);
         printf("-----------------------------------------------");
