@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include <locale.h>
+#include <string.h>
 
 typedef struct little
 {
@@ -218,35 +220,77 @@ int resolve(float a, grafico *grafico)
 //  grafico de ocupacao (eixo y de 0 a 1 (ocupacao)) e eixo x com tempo) o mesmo gráfico deve conter todos os valores (80%, 90%, ...)
 //  nenhuma medida pode tender ao infinito
 
-void cria_grafico(grafico graficos, char *rotulo, char *nome_grafico)
+void cria_grafico(grafico *graficos, char *nome_grafico)
 {
-    // create a gnuplot graphic
-    printf("set title '%s' \n", rotulo);
+    printf("set title '%s' \n", nome_grafico);
+
     printf("set xlabel '%s' \n", "Tempo");
-    printf("set ylabel '%s' \n", "Ocupação");
+    printf("set ylabel '%s' \n", nome_grafico);
+
     printf("set grid \n");
     printf("set term png \n");
     printf("set output '%s.png' \n", nome_grafico);
-    printf("plot '-' with lines title '%s' \n", rotulo);
 
-    for (int i = 0; i < 360; i++)
+    printf("plot '-' u 1:2 t '80' with lines, "
+           "'-' u 1:2 t '90' with lines,"
+           "'-' u 1:2 t '95' with lines,"
+           "'-' u 1:2 t '99' with lines"
+           "\n");
+
+    if (strcmp(nome_grafico, "Little") == 0)
     {
-        printf("%lF %lF \n", graficos.tempo[i], graficos.e_n_final[i]);
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 360; j++)
+            {
+                printf("    %lF %.20lF \n", graficos[i].tempo[j], graficos[i].little[j]);
+            }
+            printf("e \n");
+        }
     }
-    printf("plot '-' with lines title '%s' \n", "lakaka");
-    for (int i = 0; i < 360; i++)
+    else if (strcmp(nome_grafico, "E[N]") == 0)
     {
-        printf("%lF %lF \n", graficos.tempo[i], graficos.e_w_final[i]);
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 360; j++)
+            {
+                printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].e_n_final[j]);
+            }
+            printf("e \n");
+        }
     }
-    printf("e \n");
+    else if (strcmp(nome_grafico, "E[W]") == 0)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 360; j++)
+            {
+                printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].e_w_final[j]);
+            }
+            printf("e \n");
+        }
+    }
+    else if (strcmp(nome_grafico, "Lambda") == 0)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 360; j++)
+            {
+                printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].lambda[j]);
+            }
+            printf("e \n");
+        }
+    }
 }
 
 int main()
 {
-    // 80% = 0.16, 90% = 0.18, 95% = 0.19 e 99% = 0.198
-    float taxas[] = {0.16, 0.18, 0.19, 0.198};
-    grafico grafico_80, grafico_90, grafico_95, grafico_99;
+    setlocale(LC_ALL, "PT_BR");
 
+    float taxas[] = {0.16, 0.18, 0.19, 0.198};
+    int porcentagens[] = {80, 90, 95, 99};
+
+    grafico grafico_80, grafico_90, grafico_95, grafico_99;
     grafico graficos[4] = {grafico_80, grafico_90, grafico_95, grafico_99};
 
     for (int i = 0; i < 4; i++)
@@ -254,13 +298,10 @@ int main()
         inicia_grafico(&graficos[i]);
         resolve(taxas[i], &graficos[i]);
     }
+    
+    cria_grafico(graficos, "E[N]");
+    cria_grafico(graficos, "E[W]");
+    cria_grafico(graficos, "Lambda");
+    cria_grafico(graficos, "Little");
 
-    for (int i = 0; i < 4; i++)
-    {
-        char nome[12];
-        sprintf(nome, "grafico_%d", i);
-        cria_grafico(graficos[i], "E[N]", nome);
-    }
-
-    system("gnuplot grafico.txt");
 }
