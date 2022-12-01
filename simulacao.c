@@ -9,6 +9,7 @@
 #define INTERVALO_MEDIO_CHEGADA 0.2
 #define TAXA_CHEGADA 100
 #define TEMPO_SIMULACAO_EM_INTERVALO 360
+#define SEED 0
 /*
  * @tparam no_eventos: número de eventos;
  * @tparam tempo_anterior: tempo anterior;
@@ -115,7 +116,7 @@ void inicia_grafico(grafico *g)
 }
 
 /*
- * @param a: taxa da porcentagem
+ * @param percentual_calculado: taxa da porcentagem
  * @param *grafico: ponteiro para uma struct grafico
  */
 void resolve(float percentual_calculado, grafico *grafico)
@@ -143,7 +144,7 @@ void resolve(float percentual_calculado, grafico *grafico)
     inicia_little(&e_w_saida);
 
     // Iniciando uma semente aleatória estática para garantir os mesmos cálculos em qualquer máquina
-    srand(0);
+    srand(SEED);
 
     // Defininindo o tempo de simulação conforme o solicitado na atividade
     tempo_simulacao = TEMPO_SIMULACAO;
