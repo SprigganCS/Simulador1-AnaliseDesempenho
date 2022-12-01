@@ -5,6 +5,15 @@
 #include <locale.h>
 #include <string.h>
 
+#define TEMPO_SIMULACAO 36000
+#define INTERVALO_MEDIO_CHEGADA 0.2
+#define TAXA_CHEGADA 100
+#define TEMPO_SIMULACAO_EM_INTERVALO 360
+/*
+ * @tparam no_eventos: número de eventos;
+ * @tparam tempo_anterior: tempo anterior;
+ * @tparam soma_areas: soma de áreas;
+ */
 typedef struct little
 {
     unsigned long int no_eventos;
@@ -13,27 +22,44 @@ typedef struct little
 
 } little;
 
+/*
+ * @tparam e_n_final: array de tempo médio de fila
+ * @tparam r_w_final: array de tempo médio de espera
+ * @tparam lambda: array do operador lambda
+ * @tparam tempo: array de tempos
+ * @tparam little: array dos cálculos de little
+ * @tparam ocupacao: array de ocupacao da simulacao
+ * @tparam max_fila: array dos máximos de fila
+ *
+ */
 typedef struct grafico
 {
-    double e_n_final[360];
-    double e_w_final[360];
-    double lambda[360];
-    double tempo[360];
-    double little[360];
-    double ocupacao[360];
-    double max_fila[360];
+    double e_n_final[TEMPO_SIMULACAO_EM_INTERVALO];
+    double e_w_final[TEMPO_SIMULACAO_EM_INTERVALO];
+    double lambda[TEMPO_SIMULACAO_EM_INTERVALO];
+    double tempo[TEMPO_SIMULACAO_EM_INTERVALO];
+    double little[TEMPO_SIMULACAO_EM_INTERVALO];
+    double ocupacao[TEMPO_SIMULACAO_EM_INTERVALO];
+    double max_fila[TEMPO_SIMULACAO_EM_INTERVALO];
 
 } grafico;
 
+/*
+ * @param N/A
+ * @return Número aleatório limitado entre 0 e 1
+ */
 double aleatorio()
 {
     double u = rand() / ((double)RAND_MAX + 1);
-    // limitando entre (0,1]
     u = 1.0 - u;
-
     return (u);
 }
 
+/*
+ * @param num1: primeiro número a ser comparado
+ * @param num2: segundo número a ser comparado
+ * @return Número menor
+ */
 double minimo(double num1, double num2)
 {
     if (num1 < num2)
@@ -43,6 +69,11 @@ double minimo(double num1, double num2)
     return num2;
 }
 
+/*
+ * @param num1: primeiro número a ser comparado
+ * @param num2: segundo número a ser comparado
+ * @return Número maior
+ */
 double maximo(double num1, double num2)
 {
     if (num1 > num2)
@@ -52,6 +83,11 @@ double maximo(double num1, double num2)
     return num2;
 }
 
+/*
+ * @param struct little
+ * @return N/A
+ * @details Inicia cada item de little com valor 0.0
+ */
 void inicia_little(little *l)
 {
     l->no_eventos = 0;
@@ -59,10 +95,14 @@ void inicia_little(little *l)
     l->soma_areas = 0.0;
 }
 
-// inicializa gráfico
+/*
+ *@param struct grafico
+ *@return N/A
+ *@details Inicia cada item de grafico com valor 0.0
+ */
 void inicia_grafico(grafico *g)
 {
-    for (int i = 0; i < 360; i++)
+    for (int i = 0; i < TEMPO_SIMULACAO_EM_INTERVALO; i++)
     {
         g->e_n_final[i] = 0.0;
         g->e_w_final[i] = 0.0;
@@ -74,73 +114,66 @@ void inicia_grafico(grafico *g)
     }
 }
 
-int resolve(float a, grafico *grafico)
+/*
+ * @param a: taxa da porcentagem
+ * @param *grafico: ponteiro para uma struct grafico
+ */
+void resolve(float percentual_calculado, grafico *grafico)
 {
-    double tempo_simulacao;
-    double tempo_decorrido = 0.0;
+    // Variáveis utilizadas para execução da simulação
+    double tempo_simulacao, tempo_decorrido = 0.0, intervalo_medio_chegada, tempo_medio_servico;
 
-    double intervalo_medio_chegada;
-    double tempo_medio_servico;
+    // Variáveis utilizadas para captação de resultados da simulação
+    double chegada, servico, coleta = TAXA_CHEGADA;
 
-    double chegada;
-    double servico;
-    double coleta = 100.0;
-
+    // Variaǘel necessária para soma de tempo de serviço da simulação
     double soma_tempo_servico = 0.0;
 
-    unsigned long int fila = 0;
-    unsigned long int max_fila = 0;
+    // Variáveis de controle para fila.
+    unsigned long int fila = 0, max_fila = 0;
 
     /*
-    Little -> E[n] = lambda * E[w] -> média de quantidade de requisicoes dentro do sistema = taxa de chegada * media do tempo de espera dentro do sistema
-    */
+     * Estruturas para cálculo da Lei de Little, AKA taxa de chegada * media do tempo de espera dentro do sistema
+     */
+    little e_n, e_w_chegada, e_w_saida;
 
-    little e_n;
-    little e_w_chegada;
-    little e_w_saida;
-
+    // Inicializa as estruturas de little
     inicia_little(&e_n);
     inicia_little(&e_w_chegada);
     inicia_little(&e_w_saida);
 
-    /*
-    Little -- fim
-    */
-
+    // Iniciando uma semente aleatória estática para garantir os mesmos cálculos em qualquer máquina
     srand(0);
 
-    // printf("Informe o tempo de simulacao (segundos): ");
-    // scanf("%lF", &tempo_simulacao);
-    tempo_simulacao = 36000;
+    // Defininindo o tempo de simulação conforme o solicitado na atividade
+    tempo_simulacao = TEMPO_SIMULACAO;
 
-    // printf("Informe o intervalo medio entre chegadas (segundos): ");
-    // scanf("%lF", &intervalo_medio_chegada);
-    intervalo_medio_chegada = 0.2;
+    // Definindo o intervalo de chegada como 5/s
+    intervalo_medio_chegada = INTERVALO_MEDIO_CHEGADA;
 
-    // printf("Informe o tempo medio de servico (segundos): ");
-    // scanf("%lF", &tempo_medio_servico);
-    tempo_medio_servico = a; // receber  4 parametros para esse valor que faz a taxa de ocupação ser 80%, 90% 95% e 99%
+    // Taxas conforme cálculo para 80%, 90% 95% e 99%
+    tempo_medio_servico = percentual_calculado;
 
-    // gerando o tempo de chegada da primeira requisicao.
+    // Gerando o tempo de chegada da primeira requisicao.
     chegada = (-1.0 / (1.0 / intervalo_medio_chegada)) * log(aleatorio());
 
+    // Índice de controle dos arrays da struct de dados
     int index = 0;
 
+    // Looping de simulação
     while (tempo_decorrido <= tempo_simulacao)
     {
-
-        // chegada, servico, coleta
-        // eventualmente, fila == 0 (esta ocioso) --> servico pode ser desprezada
+        /*
+         * Cálculo do tempo decorrido com base na fila.
+         * Eventualmente, fila == 0 (esta ocioso), onde o servico pode ser desprezado
+         * Havendo fila tempo_decorrido deve ser o menor entre chegada, serviço e tempo de coleta
+         * Um caso a mais deve ser tratando dentro da cadeia de ifs (coleta)
+         */
         tempo_decorrido = !fila ? minimo(chegada, coleta) : minimo(minimo(chegada, coleta), servico);
 
-        // havendo fila tempo_decorrido deve ser o menor entre chegada, serviço e tempo de coleta
-        // um caso a mais deve ser tratando dentro da cadeia de ifs (coleta)
-
-        // chegada
-
+        // Se chegou
         if (tempo_decorrido == chegada)
         {
-            // printf("Chegada em %lF.\n", tempo_decorrido);
             if (!fila)
             {
                 servico = tempo_decorrido + (-1.0 / (1.0 / tempo_medio_servico)) * log(aleatorio());
@@ -151,7 +184,7 @@ int resolve(float a, grafico *grafico)
 
             chegada = tempo_decorrido + (-1.0 / (1.0 / intervalo_medio_chegada)) * log(aleatorio());
 
-            // little
+            // Cálculos de Little
             e_n.soma_areas += (tempo_decorrido - e_n.tempo_anterior) * e_n.no_eventos;
             e_n.tempo_anterior = tempo_decorrido;
             e_n.no_eventos++;
@@ -159,11 +192,12 @@ int resolve(float a, grafico *grafico)
             e_w_chegada.soma_areas += (tempo_decorrido - e_w_chegada.tempo_anterior) * e_w_chegada.no_eventos; // primeira iteração da 0
             e_w_chegada.tempo_anterior = tempo_decorrido;
             e_w_chegada.no_eventos++;
-            // little
+            // Fim dos cálculos de Little
         }
+        // Se saiu
         else if (tempo_decorrido == servico)
-        { // saida
-            // printf("Saida em %lF.\n", tempo_decorrido);
+        {
+            // Decréscimo da fila
             fila--;
 
             if (fila)
@@ -172,7 +206,7 @@ int resolve(float a, grafico *grafico)
                 soma_tempo_servico += servico - tempo_decorrido;
             }
 
-            // little
+            // Cálculos de Little
             e_n.soma_areas += (tempo_decorrido - e_n.tempo_anterior) * e_n.no_eventos;
             e_n.tempo_anterior = tempo_decorrido;
             e_n.no_eventos--;
@@ -180,12 +214,12 @@ int resolve(float a, grafico *grafico)
             e_w_saida.soma_areas += (tempo_decorrido - e_w_saida.tempo_anterior) * e_w_saida.no_eventos;
             e_w_saida.tempo_anterior = tempo_decorrido;
             e_w_saida.no_eventos++;
-            // little
+            // Fim dos cálculos de Little
         }
+        // Agora sim, coleta dos dados
         else
         {
-            // coleta dados
-            // printf("\nTempo de coleta: %lF\n", tempo_decorrido);
+            // Início dos cálculos necessários para os parâmetros listados na atividade
             e_n.soma_areas += (tempo_decorrido - e_n.tempo_anterior) * e_n.no_eventos;
             e_w_chegada.soma_areas += (tempo_decorrido - e_w_chegada.tempo_anterior) * e_w_chegada.no_eventos;
             e_w_saida.soma_areas += (tempo_decorrido - e_w_saida.tempo_anterior) * e_w_saida.no_eventos;
@@ -197,9 +231,12 @@ int resolve(float a, grafico *grafico)
             double e_n_final = e_n.soma_areas / tempo_decorrido;
             double e_w_final = (e_w_chegada.soma_areas - e_w_saida.soma_areas) / e_w_chegada.no_eventos;
             double lambda = e_w_chegada.no_eventos / tempo_decorrido;
+            // Fim dos cálculos necessários para os parâmetros listados na atividade
 
-            coleta += 100;
+            // Coleta se acrescenta como 100, identificada como 100 segundos
+            coleta += TAXA_CHEGADA;
 
+            // Início do armazenamento dos cálculos na struct de gráfico
             grafico->e_n_final[index] = e_n_final;
             grafico->e_w_final[index] = e_w_final;
             grafico->lambda[index] = lambda;
@@ -209,20 +246,26 @@ int resolve(float a, grafico *grafico)
             grafico->max_fila[index] = max_fila;
 
             index++;
-            // se entrar nesse caso a variavel de coleta deve ser atualizada para +100
+            // Fim do armazenamento dos cálculos na struct de gráfico
         }
     }
 
-    return 0;
 }
+
 /*
- * @params: array de gráficos, titulo do gráfico, nome do eixo x, nome do eixo y, variação do eixo x e variação do eixo y
- * @return: not applicable
- * @description: função que gera os gráficos para os casos de estudo usando gnuplot
+ * @param *graficos: array de graficos em ponteiro
+ * @param titulo_grafico: Título do gráfico a ser criado
+ * @param eixo_y: Nome do eixo y
+ * @param eixo_x: Nome do eixo x
+ * @param x_tics: Tamanho do passo do eixo x
+ * @param y_tics: Tamanho do passo do eixo y
+ * @param nome_grafico: Nome relacionado ao tipo do gráfico: Exemplo: "E[N] = gráfico de E[N]"
+ * @param orientacao_legenda: orientação de onde a legenda estará no gráfico
+ * @return N/A
+ * @details Cria um gráfico com os dados passados imprimindo na tela (espera-se utilizar redirecionador para arquivo txt, AKA ">")
  */
 void cria_grafico(grafico *graficos, char *titulo_grafico, char *eixo_y, char *eixo_x, float x_tics, float y_tics, char *nome_grafico, char *orientacao_legenda)
 {
-    //   printf("set tics font 'Helvetica,16' \n");
     printf("set title '%s' \n", titulo_grafico);
     printf("set xlabel '%s' \n", eixo_x);
     printf("set ylabel  '%s' \n", eixo_y);
@@ -244,7 +287,7 @@ void cria_grafico(grafico *graficos, char *titulo_grafico, char *eixo_y, char *e
     {
         for (int i = 0; i < 4; i++)
         {
-            for (int j = 0; j < 360; j++)
+            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO; j++)
             {
                 printf("    %lF %.20lF \n", graficos[i].tempo[j], graficos[i].little[j]);
             }
@@ -255,7 +298,7 @@ void cria_grafico(grafico *graficos, char *titulo_grafico, char *eixo_y, char *e
     {
         for (int i = 0; i < 4; i++)
         {
-            for (int j = 0; j < 360; j++)
+            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO; j++)
             {
                 printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].e_n_final[j]);
             }
@@ -266,7 +309,7 @@ void cria_grafico(grafico *graficos, char *titulo_grafico, char *eixo_y, char *e
     {
         for (int i = 0; i < 4; i++)
         {
-            for (int j = 0; j < 360; j++)
+            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO; j++)
             {
                 printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].e_w_final[j]);
             }
@@ -277,7 +320,7 @@ void cria_grafico(grafico *graficos, char *titulo_grafico, char *eixo_y, char *e
     {
         for (int i = 0; i < 4; i++)
         {
-            for (int j = 0; j < 360; j++)
+            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO; j++)
             {
                 printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].ocupacao[j]);
             }
@@ -288,7 +331,7 @@ void cria_grafico(grafico *graficos, char *titulo_grafico, char *eixo_y, char *e
     {
         for (int i = 0; i < 4; i++)
         {
-            for (int j = 0; j < 360; j++)
+            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO; j++)
             {
                 printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].max_fila[j]);
             }
@@ -299,7 +342,7 @@ void cria_grafico(grafico *graficos, char *titulo_grafico, char *eixo_y, char *e
     {
         for (int i = 0; i < 4; i++)
         {
-            for (int j = 0; j < 360; j++)
+            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO; j++)
             {
                 printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].lambda[j]);
             }
@@ -308,26 +351,41 @@ void cria_grafico(grafico *graficos, char *titulo_grafico, char *eixo_y, char *e
     }
 }
 
-int main()
+/*
+ * @param N/A
+ * @return N/A
+ * @details Função principal
+ */
+void main()
 {
+    // Utilizado para permissão de escrita de caracteres brasileiros
     setlocale(LC_ALL, "PT_BR");
 
+    // Array de taxas já calculadas com base nas porcentagens, onde taxas[0] = 80%, taxas[1] = 90%, taxas[2] = 95%, taxas[3] = 99%
     float taxas[] = {0.16, 0.18, 0.19, 0.198};
-    int porcentagens[] = {80, 90, 95, 99};
 
+    // Criando instâncias da struct gráfico para cada uma das porcentagens
     grafico grafico_80, grafico_90, grafico_95, grafico_99;
+
+    /*
+     * Criando um array que possui as instâncias de gráfico das porcentagens.
+     * Essa abordagem irá facilitar gerar gráficos e resultados esperados para cada porcentagem
+     */
     grafico graficos[4] = {grafico_80, grafico_90, grafico_95, grafico_99};
 
+    /*
+     * Iniciamos as structs do array de gráficos e a enviamos por referência para "resolve"
+     * A função "resolve" irá preencher os dados de cada gráfico
+     */
     for (int i = 0; i < 4; i++)
     {
         inicia_grafico(&graficos[i]);
         resolve(taxas[i], &graficos[i]);
     }
 
+    // Criando gráficos
     cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 10, "E[N]", "left top");
     cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 2, "E[W]", "left top");
     cria_grafico(graficos, "Ocupações conforme o tempo", "Ocupacao", "Tempo (s)", 2000, 0.025, "Ocupacao", "right bot");
     cria_grafico(graficos, "Erro de Little para diferentes ocupações", "Little", "Tempo (s)", 2000, 0.0000000004, "Little", "left top");
-    //   cria_grafico(graficos, "Max_fila", "Max_fila", "Tempo", 1000, 10);
-    //  cria_grafico(graficos, "Lambda", "Lambda", "Tempo", 1000, 0.0000000002);
 }
