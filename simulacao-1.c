@@ -215,26 +215,29 @@ int resolve(float a, grafico *grafico)
 
     return 0;
 }
-
-// para 90% 80% 95% e 99% deve modificar o tempo de serviço, já que o tempo médio de chegada é fixa
-//  grafico de ocupacao (eixo y de 0 a 1 (ocupacao)) e eixo x com tempo) o mesmo gráfico deve conter todos os valores (80%, 90%, ...)
-//  nenhuma medida pode tender ao infinito
-
-void cria_grafico(grafico *graficos, char *nome_grafico)
+/*
+ * @params: array de gráficos, titulo do gráfico, nome do eixo x, nome do eixo y, variação do eixo x e variação do eixo y
+ * @return: not applicable
+ * @description: função que gera os gráficos para os casos de estudo usando gnuplot
+ */
+void cria_grafico(grafico *graficos, char *titulo_grafico, char *eixo_y, char *eixo_x, float x_tics, float y_tics, char *nome_grafico, char *orientacao_legenda)
 {
-    printf("set title '%s' \n", nome_grafico);
-
-    printf("set xlabel '%s' \n", "Tempo");
-    printf("set ylabel '%s' \n", nome_grafico);
-
+    //   printf("set tics font 'Helvetica,16' \n");
+    printf("set title '%s' \n", titulo_grafico);
+    printf("set xlabel '%s' \n", eixo_x);
+    printf("set ylabel  '%s' \n", eixo_y);
+    printf("set xtics %.20f \n", x_tics);
+    printf("set ytics %.20f \n", y_tics);
     printf("set grid \n");
     printf("set term png \n");
-    printf("set output '%s.png' \n", nome_grafico);
-
-    printf("plot '-' u 1:2 t '80' with lines, "
-           "'-' u 1:2 t '90' with lines,"
-           "'-' u 1:2 t '95' with lines,"
-           "'-' u 1:2 t '99' with lines"
+    printf("set terminal png size 1920,1080 font 'Arial,18' \n");
+    printf("set key %s \n", orientacao_legenda);
+    printf("set output '%s.png' \n", eixo_y);
+    printf("plot"
+           "'-' u 1:2 t '80%%' with lines lw 3.5, "
+           "'-' u 1:2 t '90%%' with lines lw 3.5,"
+           "'-' u 1:2 t '95%%' with lines lw 3.5,"
+           "'-' u 1:2 t '99%%' with lines lw 3.5"
            "\n");
 
     if (strcmp(nome_grafico, "Little") == 0)
@@ -270,6 +273,28 @@ void cria_grafico(grafico *graficos, char *nome_grafico)
             printf("e \n");
         }
     }
+    else if (strcmp(nome_grafico, "Ocupacao") == 0)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 360; j++)
+            {
+                printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].ocupacao[j]);
+            }
+            printf("e \n");
+        }
+    }
+    else if (strcmp(nome_grafico, "Max_fila") == 0)
+    {
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 360; j++)
+            {
+                printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].max_fila[j]);
+            }
+            printf("e \n");
+        }
+    }
     else if (strcmp(nome_grafico, "Lambda") == 0)
     {
         for (int i = 0; i < 4; i++)
@@ -298,10 +323,11 @@ int main()
         inicia_grafico(&graficos[i]);
         resolve(taxas[i], &graficos[i]);
     }
-    
-    cria_grafico(graficos, "E[N]");
-    cria_grafico(graficos, "E[W]");
-    cria_grafico(graficos, "Lambda");
-    cria_grafico(graficos, "Little");
 
+    cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 10, "E[N]", "left top");
+    cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 2, "E[W]", "left top");
+    cria_grafico(graficos, "Ocupações conforme o tempo", "Ocupacao", "Tempo (s)", 2000, 0.025, "Ocupacao", "right bot");
+    cria_grafico(graficos, "Erro de Little para diferentes ocupações", "Little", "Tempo (s)", 2000, 0.0000000004, "Little", "left top");
+    //   cria_grafico(graficos, "Max_fila", "Max_fila", "Tempo", 1000, 10);
+    //  cria_grafico(graficos, "Lambda", "Lambda", "Tempo", 1000, 0.0000000002);
 }
