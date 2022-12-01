@@ -45,7 +45,34 @@ void inicia_little(little *l)
     l->soma_areas = 0.0;
 }
 
-int resolve(float a)
+typedef struct grafico
+{
+    double e_n_final[360];
+    double e_w_final[360];
+    double lambda[360];
+    double tempo[360];
+    double little[360];
+    double ocupacao[360];
+    double max_fila[360];
+
+} grafico;
+
+// inicializa gráfico
+void inicia_grafico(grafico *g)
+{
+    for (int i = 0; i < 360; i++)
+    {
+        g->e_n_final[i] = 0.0;
+        g->e_w_final[i] = 0.0;
+        g->lambda[i] = 0.0;
+        g->tempo[i] = 0.0;
+        g->little[i] = 0.0;
+        g->ocupacao[i] = 0.0;
+        g->max_fila[i] = 0.0;
+    }
+}
+
+int resolve(float a, grafico* grafico)
 {
     double tempo_simulacao;
     double tempo_decorrido = 0.0;
@@ -55,7 +82,7 @@ int resolve(float a)
 
     double chegada;
     double servico;
-	double coleta = 100.0;
+    double coleta = 100.0;
 
     double soma_tempo_servico = 0.0;
 
@@ -80,32 +107,35 @@ int resolve(float a)
 
     srand(0);
 
-    //printf("Informe o tempo de simulacao (segundos): ");
-    //scanf("%lF", &tempo_simulacao);
+    // printf("Informe o tempo de simulacao (segundos): ");
+    // scanf("%lF", &tempo_simulacao);
     tempo_simulacao = 36000;
 
-    //printf("Informe o intervalo medio entre chegadas (segundos): ");
-    //scanf("%lF", &intervalo_medio_chegada);
+    // printf("Informe o intervalo medio entre chegadas (segundos): ");
+    // scanf("%lF", &intervalo_medio_chegada);
     intervalo_medio_chegada = 0.2;
 
-    //printf("Informe o tempo medio de servico (segundos): ");
-    //scanf("%lF", &tempo_medio_servico);   
-    tempo_medio_servico = a; //receber  4 parametros para esse valor que faz a taxa de ocupação ser 80%, 90% 95% e 99%
+    // printf("Informe o tempo medio de servico (segundos): ");
+    // scanf("%lF", &tempo_medio_servico);
+    tempo_medio_servico = a; // receber  4 parametros para esse valor que faz a taxa de ocupação ser 80%, 90% 95% e 99%
 
     // gerando o tempo de chegada da primeira requisicao.
     chegada = (-1.0 / (1.0 / intervalo_medio_chegada)) * log(aleatorio());
 
+    int index = 0;
+
     while (tempo_decorrido <= tempo_simulacao)
     {
 
-		//chegada, servico, coleta
-		//eventualmente, fila == 0 (esta ocioso) --> servico pode ser desprezada
+        // chegada, servico, coleta
+        // eventualmente, fila == 0 (esta ocioso) --> servico pode ser desprezada
         tempo_decorrido = !fila ? minimo(chegada, coleta) : minimo(minimo(chegada, coleta), servico);
-		
-			//havendo fila tempo_decorrido deve ser o menor entre chegada, serviço e tempo de coleta
-			//um caso a mais deve ser tratando dentro da cadeia de ifs (coleta)
+
+        // havendo fila tempo_decorrido deve ser o menor entre chegada, serviço e tempo de coleta
+        // um caso a mais deve ser tratando dentro da cadeia de ifs (coleta)
 
         // chegada
+        
         if (tempo_decorrido == chegada)
         {
             // printf("Chegada em %lF.\n", tempo_decorrido);
@@ -124,12 +154,12 @@ int resolve(float a)
             e_n.tempo_anterior = tempo_decorrido;
             e_n.no_eventos++;
 
-            e_w_chegada.soma_areas += (tempo_decorrido - e_w_chegada.tempo_anterior) * e_w_chegada.no_eventos; //primeira iteração da 0
+            e_w_chegada.soma_areas += (tempo_decorrido - e_w_chegada.tempo_anterior) * e_w_chegada.no_eventos; // primeira iteração da 0
             e_w_chegada.tempo_anterior = tempo_decorrido;
             e_w_chegada.no_eventos++;
             // little
         }
-		else if(tempo_decorrido == servico)
+        else if (tempo_decorrido == servico)
         { // saida
             // printf("Saida em %lF.\n", tempo_decorrido);
             fila--;
@@ -150,52 +180,62 @@ int resolve(float a)
             e_w_saida.no_eventos++;
             // little
         }
-		else{
-			//coleta dados
-			printf("\nTempo de coleta: %lF\n", tempo_decorrido);
-			e_n.soma_areas += (tempo_decorrido - e_n.tempo_anterior) * e_n.no_eventos;
-    		e_w_chegada.soma_areas += (tempo_decorrido - e_w_chegada.tempo_anterior) * e_w_chegada.no_eventos;
-    		e_w_saida.soma_areas += (tempo_decorrido - e_w_saida.tempo_anterior) * e_w_saida.no_eventos;
+        else
+        {
+            // coleta dados
+            // printf("\nTempo de coleta: %lF\n", tempo_decorrido);
+            e_n.soma_areas += (tempo_decorrido - e_n.tempo_anterior) * e_n.no_eventos;
+            e_w_chegada.soma_areas += (tempo_decorrido - e_w_chegada.tempo_anterior) * e_w_chegada.no_eventos;
+            e_w_saida.soma_areas += (tempo_decorrido - e_w_saida.tempo_anterior) * e_w_saida.no_eventos;
 
-			e_w_saida.tempo_anterior = tempo_decorrido;
-			e_n.tempo_anterior = tempo_decorrido;
-			e_w_chegada.tempo_anterior = tempo_decorrido;
+            e_w_saida.tempo_anterior = tempo_decorrido;
+            e_n.tempo_anterior = tempo_decorrido;
+            e_w_chegada.tempo_anterior = tempo_decorrido;
 
-			
-    		double e_n_final = e_n.soma_areas / tempo_decorrido;
-    		double e_w_final = (e_w_chegada.soma_areas - e_w_saida.soma_areas) / e_w_chegada.no_eventos;
-    		double lambda = e_w_chegada.no_eventos / tempo_decorrido;
+            double e_n_final = e_n.soma_areas / tempo_decorrido;
+            double e_w_final = (e_w_chegada.soma_areas - e_w_saida.soma_areas) / e_w_chegada.no_eventos;
+            double lambda = e_w_chegada.no_eventos / tempo_decorrido;
 
-    		printf("\n");
-    		printf("E[N] = %lF\n", e_n_final); //tamanho medio de fila
-    		printf("E[W] = %lF\n", e_w_final); //tempo medio de espera
-    		printf("Lambda = %lF\n", lambda);  //pessoas que chegam por segundo
+            coleta += 100;
 
-    		printf("Erro de Little: %.20lF\n\n", e_n_final - lambda * e_w_final);
+            grafico->e_n_final[index] = e_n_final;
+            grafico->e_w_final[index] = e_w_final;
+            grafico->lambda[index] = lambda;
+            grafico->tempo[index] = tempo_decorrido;
+            grafico->little[index] = e_n_final - lambda * e_w_final;
+            grafico->ocupacao[index] = soma_tempo_servico / maximo(tempo_decorrido, servico);
+            grafico->max_fila[index] = max_fila;
 
-    		printf("Ocupacao: %lF.\n", soma_tempo_servico / maximo(tempo_decorrido, servico));
-    		printf("Max fila: %ld.\n", max_fila);
-			coleta+=100;
-			//se entrar nesse caso a variavel de coleta deve ser atualizada para +100
-		}
+            index++;
+            // se entrar nesse caso a variavel de coleta deve ser atualizada para +100
+        }
     }
-
-    
 
     return 0;
 }
 
+// para 90% 80% 95% e 99% deve modificar o tempo de serviço, já que o tempo médio de chegada é fixa
+//  grafico de ocupacao (eixo y de 0 a 1 (ocupacao)) e eixo x com tempo) o mesmo gráfico deve conter todos os valores (80%, 90%, ...)
+//  nenhuma medida pode tender ao infinito
 
-//para 90% 80% 95% e 99% deve modificar o tempo de serviço, já que o tempo médio de chegada é fixa
-// grafico de ocupacao (eixo y de 0 a 1 (ocupacao)) e eixo x com tempo) o mesmo gráfico deve conter todos os valores (80%, 90%, ...)
-// nenhuma medida pode tender ao infinito
-// 
-
-
-int main(){
+int main()
+{
+    // 80% = 0.16, 90% = 0.18, 95% = 0.19 e 99% = 0.198
     float taxas[] = {0.16, 0.18, 0.19, 0.198};
-    for(int i=0; i<4; i++){
-        resolve(taxas[i]);
-        printf("-----------------------------------------------");
+    grafico grafico_80, grafico_90, grafico_95, grafico_99;
+
+    grafico graficos[4] = {grafico_80, grafico_90, grafico_95, grafico_99};
+
+    for (int i = 0; i < 4; i++)
+    {
+        inicia_grafico(&graficos[i]);
+        resolve(taxas[i], &graficos[i]);
+    }
+
+    for(int i = 0; i < 4; i++){
+        printf("Taxa: %f\n", taxas[i]);
+        for(int j = 0; j < 360; j++){
+            printf("Tempo: %f, E[N]: %f, E[W]: %f, Lambda: %f, Little: %.20lF, Ocupacao: %f, Max Fila: %f\n", graficos[i].tempo[j], graficos[i].e_n_final[j], graficos[i].e_w_final[j], graficos[i].lambda[j], graficos[i].little[j], graficos[i].ocupacao[j], graficos[i].max_fila[j]);
+        }
     }
 }
