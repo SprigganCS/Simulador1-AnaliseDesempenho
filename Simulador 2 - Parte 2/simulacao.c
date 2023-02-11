@@ -23,6 +23,12 @@ typedef struct little
 
 } little;
 
+typedef struct histograma_l
+{
+    unsigned long int no_eventos[TEMPO_SIMULACAO_EM_INTERVALO];
+    double L[TEMPO_SIMULACAO_EM_INTERVALO];
+} histograma;
+
 /*
  * @tparam e_n_final: array de tempo médio de fila
  * @tparam r_w_final: array de tempo médio de espera
@@ -115,6 +121,15 @@ void inicia_grafico(grafico *g)
     }
 }
 
+void inicia_histograma(histograma *h)
+{
+    for (int i = 0; i < TEMPO_SIMULACAO_EM_INTERVALO; i++)
+    {
+        h->no_eventos[i] = 0;
+        h->L[i] = 0;
+    }
+}
+
 double calculo_l()
 {
     double valor = aleatorio();
@@ -137,7 +152,7 @@ double calculo_l()
  * @param percentual_calculado: taxa da porcentagem
  * @param *grafico: ponteiro para uma struct grafico
  */
-void resolve(float percentual_calculado, grafico *grafico)
+void resolve(float percentual_calculado, grafico *grafico, histograma *histograma)
 {
     // Variáveis utilizadas para execução da simulação
     double tempo_simulacao, tempo_decorrido = 0.0, intervalo_medio_chegada, tempo_medio_servico;
@@ -195,7 +210,7 @@ void resolve(float percentual_calculado, grafico *grafico)
             if (!fila)
             {
                 double L = calculo_l(), log_aleatorio = log(aleatorio());
-                
+
                 servico = tempo_decorrido + (-1.0 / (1.0 / tempo_medio_servico)) * log_aleatorio;
 
                 tempo_servico = servico - tempo_decorrido;
@@ -278,6 +293,8 @@ void resolve(float percentual_calculado, grafico *grafico)
             grafico->ocupacao[index] = soma_tempo_servico / maximo(tempo_decorrido, servico);
             grafico->max_fila[index] = max_fila;
 
+            histograma->no_eventos[index] = tempo_decorrido;
+            histograma->L[index] = atraso_transmissao;
             index++;
             // Fim do armazenamento dos cálculos na struct de gráfico
         }
@@ -399,12 +416,15 @@ void main()
     // Criando instâncias da struct gráfico para cada uma das porcentagens
     grafico grafico_60, grafico_80, grafico_95, grafico_99;
 
+    histograma histograma_60, histograma_80, histograma_95, histograma_99;
+
     /*
      * Criando um array que possui as instâncias de gráfico das porcentagens.
      * Essa abordagem irá facilitar gerar gráficos e resultados esperados para cada porcentagem
      */
     grafico graficos[4] = {grafico_60, grafico_80, grafico_95, grafico_99};
 
+    histograma histogramas[4] = {histograma_60, histograma_80, histograma_95, histograma_99};
     /*
      * Iniciamos as structs do array de gráficos e a enviamos por referência para "resolve"
      * A função "resolve" irá preencher os dados de cada gráfico
@@ -412,7 +432,8 @@ void main()
     for (int i = 0; i < 4; i++)
     {
         inicia_grafico(&graficos[i]);
-        resolve(taxas[i], &graficos[i]);
+        inicia_histograma(&histogramas[i]);
+        resolve(taxas[i], &graficos[i], &histogramas[i]);
     }
 
     // Criando gráficos
@@ -420,4 +441,9 @@ void main()
     cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 2, "E[W]", "left top");
     cria_grafico(graficos, "Ocupações conforme o tempo", "Ocupacao", "Tempo (s)", 2000, 0.025, "Ocupacao", "right bot");
     cria_grafico(graficos, "Erro de Little para diferentes ocupações", "Little", "Tempo (s)", 2000, 0.0000000004, "Little", "left top");
+
+    for(int i = 0; i < TEMPO_SIMULACAO; i++)
+    {
+        //printf(" %d ", histogramas[0].L);
+    }
 }
