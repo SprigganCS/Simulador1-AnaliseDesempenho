@@ -23,6 +23,13 @@ typedef struct little
 
 } little;
 
+typedef struct chamada
+{
+    unsigned long int tempo_inicio[TEMPO_SIMULACAO_EM_INTERVALO];
+    unsigned long int duracao[TEMPO_SIMULACAO_EM_INTERVALO];
+    unsigned long int tamanho[TEMPO_SIMULACAO_EM_INTERVALO];
+} chamada;
+
 /*
  * @tparam e_n_final: array de tempo médio de fila
  * @tparam r_w_final: array de tempo médio de espera
@@ -112,6 +119,36 @@ void inicia_grafico(grafico *g)
         g->little[i] = 0.0;
         g->ocupacao[i] = 0.0;
         g->max_fila[i] = 0.0;
+    }
+}
+
+void inicia_chamada(chamada *g)
+{
+    for (int i = 0; i < TEMPO_SIMULACAO_EM_INTERVALO; i++)
+    {
+        g->tempo_inicio[i] = 0.0;
+        g->duracao[i] = 0.0;
+        g->tamanho[i] = 0.0;
+    }
+}
+
+unsigned long int gera_inicio_chamada() {
+    //retuurn random number between 0 and 3540
+    return rand() % 3540;
+}
+
+unsigned long int gera_duracao_chamada() {
+    //return random number between 60 and 3600
+    return rand() % 3540 + 60;
+}
+
+void gera_chamadas(chamada *g)
+{
+    for (int i = 0; i < TEMPO_SIMULACAO_EM_INTERVALO; i++)
+    {
+        g->tempo_inicio[i] = gera_inicio_chamada() ;
+        g->duracao[i] = gera_duracao_chamada();
+        g->tamanho[i] = g->duracao[i] * 64;
     }
 }
 
@@ -449,15 +486,26 @@ void main()
      * Iniciamos as structs do array de gráficos e a enviamos por referência para "resolve"
      * A função "resolve" irá preencher os dados de cada gráfico
      */
-    for (int i = 0; i < 4; i++)
-    {
-        inicia_grafico(&graficos[i]);
-        resolve(taxas[i], &graficos[i]);
-    }
+    // for (int i = 0; i < 4; i++)
+    // {
+    //     inicia_grafico(&graficos[i]);
+    //     resolve(taxas[i], &graficos[i]);
+    // }
 
+
+    chamada chamada;
+
+    // Iniciando a struct chamada
+    inicia_chamada(&chamada);
+    gera_chamadas(&chamada);
+    
+    for (int i = 0; i < TEMPO_SIMULACAO_EM_INTERVALO; i++)
+    {
+        printf("    %ld %ld %ld \n", chamada.tempo_inicio[i], chamada.duracao[i], chamada.tamanho[i]);
+    }
     // Criando gráficos
-    cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 10, "E[N]", "left top");
-    cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 0.1, "E[W]", "left top");
-    cria_grafico(graficos, "Ocupações conforme o tempo", "Ocupacao", "Tempo (s)", 2000, 0.025, "Ocupacao", "right bot");
-    cria_grafico(graficos, "Erro de Little para diferentes ocupações", "Little", "Tempo (s)", 2000, 0.0000000090, "Little", "left top");
+    // cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 10, "E[N]", "left top");
+    // cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 0.1, "E[W]", "left top");
+    // cria_grafico(graficos, "Ocupações conforme o tempo", "Ocupacao", "Tempo (s)", 2000, 0.025, "Ocupacao", "right bot");
+    // cria_grafico(graficos, "Erro de Little para diferentes ocupações", "Little", "Tempo (s)", 2000, 0.0000000090, "Little", "left top");
 }
