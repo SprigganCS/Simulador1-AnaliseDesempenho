@@ -178,10 +178,8 @@ void resolve(float percentual_calculado, grafico *grafico)
     // Índice de controle dos arrays da struct de dados
     int index = 0;
 
-
-
-    //EDIT: taxas médias do link para cada ocupação, quanto maior a largura, menos ocupado
-    int link[4] = {73500, 55125, 46421, 44545};
+    // EDIT: taxas médias do link para cada ocupação, quanto maior a largura, menos ocupado
+    double link[4] = {73500, 55125, 46421, 44545};
 
     // Looping de simulação
     while (tempo_decorrido <= tempo_simulacao)
@@ -201,21 +199,31 @@ void resolve(float percentual_calculado, grafico *grafico)
             {
                 double L = calculo_l(), log_aleatorio = log(aleatorio());
 
+                // EDIT: calculo do atraso de transmissão
+                if (percentual_calculado == (float)0.006000)
+                {
 
-                //EDIT: calculo do atraso de transmissão
-                if(percentual_calculado == 0.006){
-                    atraso_transmissao = L/link[0];
-                }else if (percentual_calculado == 0.008){
-                    atraso_transmissao = L/link[1];
+                    atraso_transmissao = L / link[0];
                 }
-                else if (percentual_calculado == 0.0095){
-                    atraso_transmissao = L/link[2];
+                else if (percentual_calculado == (float)0.008000)
+                {
+
+                    atraso_transmissao = L / link[1];
                 }
-                else if (percentual_calculado == 0.0099){
-                    atraso_transmissao = L/link[3];
+                else if (percentual_calculado == (float)0.009500)
+                {
+
+                    atraso_transmissao = L / link[2];
+                }
+                else if (percentual_calculado == (float)0.009900)
+                {
+
+                    atraso_transmissao = L / link[3];
                 }
 
-                servico = tempo_decorrido + tempo_medio_servico + atraso_transmissao;
+                //  printf("atraso: %.20f", atraso_transmissao);
+
+                servico = tempo_decorrido + atraso_transmissao;
 
                 soma_tempo_servico += servico - tempo_decorrido;
             }
@@ -240,27 +248,36 @@ void resolve(float percentual_calculado, grafico *grafico)
             // Decréscimo da fila
             fila--;
 
-            if(fila){
+            if (fila)
+            {
                 double L = calculo_l(), log_aleatorio = log(aleatorio());
 
-                //EDIT: calculo do atraso de transmissão
-                if(percentual_calculado == 0.006){
-                    atraso_transmissao = L/link[0];
-                }else if (percentual_calculado == 0.008){
-                    atraso_transmissao = L/link[1];
-                }
-                else if (percentual_calculado == 0.0095){
-                    atraso_transmissao = L/link[2];
-                }
-                else if (percentual_calculado == 0.0099){
-                    atraso_transmissao = L/link[3];
-                }
+                // EDIT: calculo do atraso de transmissão
+                if (percentual_calculado == (float)0.006000)
+                {
 
-                servico = tempo_decorrido + tempo_medio_servico + atraso_transmissao;
+                    atraso_transmissao = L / link[0];
+                }
+                else if (percentual_calculado == (float)0.008000)
+                {
+
+                    atraso_transmissao = L / link[1];
+                }
+                else if (percentual_calculado == (float)0.009500)
+                {
+
+                    atraso_transmissao = L / link[2];
+                }
+                else if (percentual_calculado == (float)0.009900)
+                {
+
+                    atraso_transmissao = L / link[3];
+                }
+                // printf("atraso: %.20f", atraso_transmissao);
+                servico = tempo_decorrido + atraso_transmissao;
 
                 soma_tempo_servico += servico - tempo_decorrido;
             }
-                
 
             // Cálculos de Little
             e_n.soma_areas += (tempo_decorrido - e_n.tempo_anterior) * e_n.no_eventos;
