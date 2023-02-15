@@ -215,7 +215,7 @@ void resolve(float percentual_calculado, grafico *grafico)
                     atraso_transmissao = L/link[3];
                 }
 
-                servico = tempo_decorrido + (-1.0 / (1.0 / tempo_medio_servico)) * log_aleatorio + atraso_transmissao;
+                servico = tempo_decorrido + tempo_medio_servico + atraso_transmissao;
 
                 soma_tempo_servico += servico - tempo_decorrido;
             }
@@ -256,7 +256,7 @@ void resolve(float percentual_calculado, grafico *grafico)
                     atraso_transmissao = L/link[3];
                 }
 
-                servico = tempo_decorrido + (-1.0 / (1.0 / tempo_medio_servico)) * log_aleatorio + atraso_transmissao;
+                servico = tempo_decorrido + tempo_medio_servico + atraso_transmissao;
 
                 soma_tempo_servico += servico - tempo_decorrido;
             }
