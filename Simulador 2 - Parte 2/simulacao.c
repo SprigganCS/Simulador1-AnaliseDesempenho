@@ -127,7 +127,7 @@ void inicia_chamada(chamada *g)
     g->tempo_inicio[0] = (15 * log(aleatorio())) * -1;
     g->duracao[0] = (60 * log(aleatorio())) * -1;
     g->tamanho[0] = g->duracao[0] * 64;
-    for (int i = 1; i < TEMPO_SIMULACAO; i++)
+    for (int i = 1; i < 2110; i++)
     {
         g->tempo_inicio[i] = 0;
         g->duracao[i] = 0;
@@ -552,8 +552,8 @@ void main()
         resolve(taxas[i], &graficos[i], &chamada);
     }
 
-    cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 10, "E[N]", "left top");
-    cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 0.1, "E[W]", "left top");
-    cria_grafico(graficos, "Ocupações conforme o tempo", "Ocupacao", "Tempo (s)", 2000, 0.025, "Ocupacao", "right bot");
+    cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 0.0000009, "E[N]", "left top");
+    cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 0.0000009, "E[W]", "left top");
+    cria_grafico(graficos, "Ocupações conforme o tempo", "Ocupacao", "Tempo (s)", 2000, 0.0000009, "Ocupacao", "right bot");
     cria_grafico(graficos, "Erro de Little para diferentes ocupações", "Little", "Tempo (s)", 2000, 0.0000000090, "Little", "left top");
 }
