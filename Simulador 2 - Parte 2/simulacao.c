@@ -25,9 +25,9 @@ typedef struct little
 
 typedef struct chamada
 {
-    unsigned long int tempo_inicio[TEMPO_SIMULACAO_EM_INTERVALO];
-    unsigned long int duracao[TEMPO_SIMULACAO_EM_INTERVALO];
-    unsigned long int tamanho[TEMPO_SIMULACAO_EM_INTERVALO];
+    unsigned long int tempo_inicio[TEMPO_SIMULACAO];
+    unsigned long int duracao[TEMPO_SIMULACAO];
+    unsigned long int tamanho[TEMPO_SIMULACAO];
 } chamada;
 
 /*
@@ -124,30 +124,33 @@ void inicia_grafico(grafico *g)
 
 void inicia_chamada(chamada *g)
 {
-    for (int i = 0; i < TEMPO_SIMULACAO_EM_INTERVALO; i++)
+    g->tempo_inicio[0] = (15 * log(aleatorio())) * -1;
+    g->duracao[0] = (60 * log(aleatorio())) * -1;
+    g->tamanho[0] = g->duracao[0] * 64;
+    for (int i = 1; i < 1542; i++)
     {
-        g->tempo_inicio[i] = 0.0;
-        g->duracao[i] = 0.0;
-        g->tamanho[i] = 0.0;
+        g->tempo_inicio[i] = 0;
+        g->duracao[i] = 0;
+        g->tamanho[i] = 0;
     }
 }
 
-unsigned long int gera_inicio_chamada() {
-    //retuurn random number between 0 and 3540
-    return rand() % 3540;
+unsigned long int gera_inicio_chamada()
+{
+    return rand() % TEMPO_SIMULACAO_EM_INTERVALO;
 }
 
-unsigned long int gera_duracao_chamada() {
-    //return random number between 60 and 3600
-    return rand() % 3540 + 60;
+unsigned long int gera_duracao_chamada()
+{
+    return rand() % TEMPO_SIMULACAO_EM_INTERVALO + 60;
 }
 
 void gera_chamadas(chamada *g)
 {
-    for (int i = 0; i < TEMPO_SIMULACAO_EM_INTERVALO; i++)
+    for (int i = 1; i < rand() % 1542; i++)
     {
-        g->tempo_inicio[i] = gera_inicio_chamada() ;
-        g->duracao[i] = gera_duracao_chamada();
+        g->tempo_inicio[i] = (gera_inicio_chamada() * log(aleatorio())) * -1;
+        g->duracao[i] = (60 * log(aleatorio())) * -1;
         g->tamanho[i] = g->duracao[i] * 64;
     }
 }
@@ -218,7 +221,7 @@ void resolve(float percentual_calculado, grafico *grafico)
     // EDIT: taxas médias do link para cada ocupação, quanto maior a largura, menos ocupado
     double link[4] = {73500, 55125, 46421, 44545};
     // EDIT2: em média 17280Kb em 105 segundos somente de chamadas, ou seja, 164.5714286Kbps ->  20571.428575 Bytes/s -> somado com a navegacao = 20571.428575 + 44100 = 64671.428575 Bytes/s
-    double new_link = {107785.714291667, 80839.28571875, 68075.1879736842, 65324.6753282828};
+    double new_link[4] = {107785.714291667, 80839.28571875, 68075.1879736842, 65324.6753282828};
 
     // Looping de simulação
     while (tempo_decorrido <= tempo_simulacao)
@@ -241,8 +244,8 @@ void resolve(float percentual_calculado, grafico *grafico)
                 // EDIT: calculo do atraso de transmissão
                 if (percentual_calculado == (float)0.006000)
                 {
-                    
-                    atraso_transmissao = L / link[0]; //seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
+
+                    atraso_transmissao = L / link[0]; // seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
                 }
                 else if (percentual_calculado == (float)0.008000)
                 {
@@ -488,23 +491,26 @@ void main()
      * Iniciamos as structs do array de gráficos e a enviamos por referência para "resolve"
      * A função "resolve" irá preencher os dados de cada gráfico
      */
-    // for (int i = 0; i < 4; i++)
-    // {
-    //     inicia_grafico(&graficos[i]);
-    //     resolve(taxas[i], &graficos[i]);
-    // }
-
+    for (int i = 0; i < 4; i++)
+    {
+        inicia_grafico(&graficos[i]);
+        resolve(taxas[i], &graficos[i]);
+    }
 
     chamada chamada;
 
     // Iniciando a struct chamada
     inicia_chamada(&chamada);
     gera_chamadas(&chamada);
-    
-    for (int i = 0; i < TEMPO_SIMULACAO_EM_INTERVALO; i++)
+
+    unsigned long int media;
+    for (int i = 0; i < 10; i++)
     {
-        printf("    %ld %ld %ld \n", chamada.tempo_inicio[i], chamada.duracao[i], chamada.tamanho[i]);
+        printf(" %i   %ld %ld %ld \n", i, chamada.tempo_inicio[i], chamada.duracao[i], chamada.tamanho[i]);
+        media += chamada.duracao[i] * -1;
     }
+
+    // printf("%ld", media/TEMPO_SIMULACAO_EM_INTERVALO);
     // Criando gráficos
     // cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 10, "E[N]", "left top");
     // cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 0.1, "E[W]", "left top");
