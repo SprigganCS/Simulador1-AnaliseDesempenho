@@ -217,6 +217,8 @@ void resolve(float percentual_calculado, grafico *grafico)
 
     // EDIT: taxas médias do link para cada ocupação, quanto maior a largura, menos ocupado
     double link[4] = {73500, 55125, 46421, 44545};
+    // EDIT2: em média 17280Kb em 105 segundos somente de chamadas, ou seja, 164.5714286Kbps ->  20571.428575 Bytes/s -> somado com a navegacao = 20571.428575 + 44100 = 64671.428575 Bytes/s
+    double new_link = {107785.714291667, 80839.28571875, 68075.1879736842, 65324.6753282828};
 
     // Looping de simulação
     while (tempo_decorrido <= tempo_simulacao)
@@ -239,8 +241,8 @@ void resolve(float percentual_calculado, grafico *grafico)
                 // EDIT: calculo do atraso de transmissão
                 if (percentual_calculado == (float)0.006000)
                 {
-
-                    atraso_transmissao = L / link[0];
+                    
+                    atraso_transmissao = L / link[0]; //seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
                 }
                 else if (percentual_calculado == (float)0.008000)
                 {
