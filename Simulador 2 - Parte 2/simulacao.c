@@ -288,8 +288,8 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
     // EDIT: taxas médias do link para cada ocupação, quanto maior a largura, menos ocupado
     double link[4] = {73500, 55125, 46421, 44545};
     // EDIT2: em média 17280Kb em 105 segundos somente de chamadas, ou seja, 164.5714286Kbps ->  20571.428575 Bytes/s -> somado com a navegacao = 20571.428575 + 44100 = 64671.428575 Bytes/s
-    // double new_link[4] = {107785.714291667, 80839.28571875, 68075.1879736842, 65324.6753282828};
-    double new_link[4] = {126833.33333333334, 95125.0, 80105.26315789475, 76868.68686868687}; //<- feito sem considerar os 15 primeiros segundos ocioso do desenho de 105. considerei as 4 ligações simultaneas medias
+     double new_link[4] = {107785.714291667, 80839.28571875, 68075.1879736842, 65324.6753282828};
+    //double new_link[4] = {126833.33333333334, 95125.0, 80105.26315789475, 76868.68686868687}; //<- feito sem considerar os 15 primeiros segundos ocioso do desenho de 105. considerei as 4 ligações simultaneas medias
     // Looping de simulação
     while (tempo_decorrido <= tempo_simulacao)
     {
@@ -493,7 +493,7 @@ void cria_grafico(grafico *graficos, char *titulo_grafico, char *eixo_y, char *e
     {
         for (int i = 0; i < 4; i++)
         {
-            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO; j++)
+            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO / 4; j++)
             {
                 printf("    %lF %.20lF \n", graficos[i].tempo[j], graficos[i].little[j]);
             }
@@ -504,7 +504,7 @@ void cria_grafico(grafico *graficos, char *titulo_grafico, char *eixo_y, char *e
     {
         for (int i = 0; i < 4; i++)
         {
-            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO; j++)
+            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO / 4; j++)
             {
                 printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].e_n_final[j]);
             }
@@ -515,7 +515,7 @@ void cria_grafico(grafico *graficos, char *titulo_grafico, char *eixo_y, char *e
     {
         for (int i = 0; i < 4; i++)
         {
-            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO; j++)
+            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO / 4; j++)
             {
                 printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].e_w_final[j]);
             }
@@ -526,7 +526,7 @@ void cria_grafico(grafico *graficos, char *titulo_grafico, char *eixo_y, char *e
     {
         for (int i = 0; i < 4; i++)
         {
-            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO; j++)
+            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO / 4; j++)
             {
                 printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].ocupacao[j]);
             }
@@ -537,7 +537,7 @@ void cria_grafico(grafico *graficos, char *titulo_grafico, char *eixo_y, char *e
     {
         for (int i = 0; i < 4; i++)
         {
-            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO; j++)
+            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO / 4; j++)
             {
                 printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].max_fila[j]);
             }
@@ -548,7 +548,7 @@ void cria_grafico(grafico *graficos, char *titulo_grafico, char *eixo_y, char *e
     {
         for (int i = 0; i < 4; i++)
         {
-            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO; j++)
+            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO / 4; j++)
             {
                 printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].lambda[j]);
             }
@@ -589,7 +589,7 @@ void main()
      * Iniciamos as structs do array de gráficos e a enviamos por referência para "resolve"
      * A função "resolve" irá preencher os dados de cada gráfico
      */
-    for (int i = 0; i < 1; i++)
+    for (int i = 0; i < 4; i++)
     {
         inicia_grafico(&graficos[i]);
         resolve(taxas[i], &graficos[i], &chamada);
