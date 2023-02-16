@@ -7,7 +7,7 @@
 
 #define TEMPO_SIMULACAO 36000
 #define INTERVALO_MEDIO_CHEGADA 0.01
-#define TAXA_CHEGADA 100
+#define TAXA_CHEGADA 100 // sao 100 de web + 200 de ligacao, tudo em media
 #define TEMPO_SIMULACAO_EM_INTERVALO 360
 #define SEED 0
 /*
@@ -155,9 +155,9 @@ unsigned long int gera_inicio_chamada_v2()
 
 void gera_chamadas(chamada *g)
 {
-    for (int i = 1; i < 2110; i++)
+    for (int i = 1; i < 2110; i++) //quantos inicios (da geracao aleatoria )são menores que 36000
     {
-        g->tempo_inicio[i] = g->tempo_inicio[i - 1] + 0.02 + gera_inicio_chamada_v2();
+        g->tempo_inicio[i] = g->tempo_inicio[i - 1]  + gera_inicio_chamada_v2();
         g->duracao[i] = (60 * log(aleatorio())) * -1;
         g->tamanho[i] = g->duracao[i] * 64;
     }
@@ -181,7 +181,12 @@ double calculo_l()
     }
 }
 
-double calcula_chamada(float tempo_decorrido, chamada *chamada)
+/*
+    deve decidir se o pacote a ser processado vai ser da navegação ou da ligação
+
+    deve retornar uma tupla em que o primeiro item é o peso do pacote ((40,550,1500 pra web) ou (160 caso tenha 1 ou mais ligacao), 0.2/qtd_ligacoes_simultaneas)
+*/
+double calcula_chamada(float tempo_decorrido, chamada *chamada) 
 {
     int i = 0;
     // Conta quantas chamadas foram iniciadas antes ou no tempo de consulta
@@ -205,7 +210,9 @@ double calcula_chamada(float tempo_decorrido, chamada *chamada)
         }
     }
     // printf("JEFFERSON -> %i", cont);
-    return (i - cont) * 8000;
+    return (i - cont) * 8000; //  1/intervalo = qtd de pacotes por segundo  -> 8000B/50pacotes -> cada pacote 160byte
+    //se tem duas chamadas simultaneas, o intervalo cai pela metade, para 4 simult. = 0.005
+    //update: independente do numero de chamadas, o peso vai ser sempre 160 Bytes (primeiro item da tupla), o segundo item da tupla é 0.02/qtd_simultaneas (que é o intervalo entre pacotes que vai ser somado na divisao do calculo da chegada na func reoslve
 }
 
 /*
@@ -279,7 +286,7 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
                 if (percentual_calculado == (float)0.006000)
                 {
                     // printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
-                    atraso_transmissao = L + calcula_chamada(tempo_decorrido, chamada) / new_link[0];
+                    atraso_transmissao = L + calcula_chamada(tempo_decorrido, chamada) / new_link[0]; //numerador deve ser bytes de ligacao OU bytes de web (calculado pela probabilidade de cada um)(qtd_pacotes_web/qtd_pacotes_web+ligacao) //vai dar 300 //printar lambda deve dar 300
                     // seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
                 }
                 else if (percentual_calculado == (float)0.008000)
@@ -313,7 +320,11 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
             fila++;
             max_fila = fila > max_fila ? fila : max_fila;
 
+            //UPDATE 5:     intervalo_medio_chegada = 1/(100+50*qtd_chamadas) -> se só tem uma ligação acontecendo a qtd_pacots_ligacao = 1/0.02n
+            //intervalo_medio_chegada = 1 / qtd_pacotes
+            //qtd_pacotes = (100 + n_chamadas * 50)
             chegada = tempo_decorrido + (-1.0 / (1.0 / intervalo_medio_chegada)) * log(aleatorio());
+            chegada = tempo_decorrido + (-1.0 / (1.0 / intervalo_medio_chegada+//retorno com intervalo_medio_chamada)) * log(aleatorio()); independente do tipo de pacote
 
             // Cálculos de Little
             e_n.soma_areas += (tempo_decorrido - e_n.tempo_anterior) * e_n.no_eventos;
@@ -395,6 +406,7 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
             double e_n_final = e_n.soma_areas / tempo_decorrido;
             double e_w_final = (e_w_chegada.soma_areas - e_w_saida.soma_areas) / e_w_chegada.no_eventos;
             double lambda = e_w_chegada.no_eventos / tempo_decorrido;
+            printf("%f\n", lambda);
             // Fim dos cálculos necessários para os parâmetros listados na atividade
 
             // Coleta se acrescenta como 100, identificada como 100 segundos
@@ -552,8 +564,8 @@ void main()
         resolve(taxas[i], &graficos[i], &chamada);
     }
 
-    cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 0.0000009, "E[N]", "left top");
-    cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 0.0000009, "E[W]", "left top");
-    cria_grafico(graficos, "Ocupações conforme o tempo", "Ocupacao", "Tempo (s)", 2000, 0.0000009, "Ocupacao", "right bot");
-    cria_grafico(graficos, "Erro de Little para diferentes ocupações", "Little", "Tempo (s)", 2000, 0.0000000090, "Little", "left top");
+    // cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 0.0000009, "E[N]", "left top");
+    // cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 0.0000009, "E[W]", "left top");
+    // cria_grafico(graficos, "Ocupações conforme o tempo", "Ocupacao", "Tempo (s)", 2000, 0.0000009, "Ocupacao", "right bot");
+    // cria_grafico(graficos, "Erro de Little para diferentes ocupações", "Little", "Tempo (s)", 2000, 0.0000000090, "Little", "left top");
 }
