@@ -7,9 +7,10 @@
 
 #define TEMPO_SIMULACAO 36000
 #define INTERVALO_MEDIO_CHEGADA 0.01
-#define TAXA_CHEGADA 100 // sao 100 de web + 200 de ligacao, tudo em media
+#define TAXA_CHEGADA 300 // sao 100 de web + 200 de ligacao, tudo em media
 #define TEMPO_SIMULACAO_EM_INTERVALO 360
 #define SEED 0
+
 /*
  * @tparam no_eventos: número de eventos;
  * @tparam tempo_anterior: tempo anterior;
@@ -127,7 +128,7 @@ void inicia_chamada(chamada *g)
     g->tempo_inicio[0] = (15 * log(aleatorio())) * -1;
     g->duracao[0] = (60 * log(aleatorio())) * -1;
     g->tamanho[0] = g->duracao[0] * 64;
-    for (int i = 1; i < 2110; i++)
+    for (int i = 1; i < 2400; i++)
     {
         g->tempo_inicio[i] = 0;
         g->duracao[i] = 0;
@@ -155,9 +156,10 @@ unsigned long int gera_inicio_chamada_v2()
 
 void gera_chamadas(chamada *g)
 {
-    for (int i = 1; i < 2110; i++) //quantos inicios (da geracao aleatoria )são menores que 36000
+    for (int i = 1; i < 2400; i++) // quantos inicios (da geracao aleatoria )são menores que 36000
     {
-        g->tempo_inicio[i] = g->tempo_inicio[i - 1]  + gera_inicio_chamada_v2();
+        float tempo_inicio = g->tempo_inicio[i - 1] + gera_inicio_chamada_v2();
+        g->tempo_inicio[i] = tempo_inicio;
         g->duracao[i] = (60 * log(aleatorio())) * -1;
         g->tamanho[i] = g->duracao[i] * 64;
     }
@@ -186,17 +188,19 @@ double calculo_l()
 
     deve retornar uma tupla em que o primeiro item é o peso do pacote ((40,550,1500 pra web) ou (160 caso tenha 1 ou mais ligacao), 0.2/qtd_ligacoes_simultaneas)
 */
-double calcula_chamada(float tempo_decorrido, chamada *chamada) 
+double *calcula_chamada(float tempo_decorrido, chamada *chamada)
 {
-    int i = 0;
+    int i = 0, cont = 0, j;
+    double pacote;
     // Conta quantas chamadas foram iniciadas antes ou no tempo de consulta
+    // Quantos pacotes de rede existem por segundo?? = 100
+    // Quantos pacotes de ligação existem por segundo?? = 200 1 / 0.02, média 4 -> 50 * 4 = 200
+
     while (chamada->tempo_inicio[i] <= tempo_decorrido)
     {
         i++;
     }
-    // printf("NEVES -> %i", i);
 
-    int cont = 0, j;
     for (j = 0; j < i; j++)
     {
         /*
@@ -209,10 +213,29 @@ double calcula_chamada(float tempo_decorrido, chamada *chamada)
             cont++;
         }
     }
-    // printf("JEFFERSON -> %i", cont);
-    return (i - cont) * 8000; //  1/intervalo = qtd de pacotes por segundo  -> 8000B/50pacotes -> cada pacote 160byte
-    //se tem duas chamadas simultaneas, o intervalo cai pela metade, para 4 simult. = 0.005
-    //update: independente do numero de chamadas, o peso vai ser sempre 160 Bytes (primeiro item da tupla), o segundo item da tupla é 0.02/qtd_simultaneas (que é o intervalo entre pacotes que vai ser somado na divisao do calculo da chegada na func reoslve
+
+    if (aleatorio() <= 0.333)
+    {
+        pacote = calculo_l();
+    }
+    else
+    {
+        if ((i - cont) > 0)
+        {
+            pacote = 160;
+        }
+        else
+        {
+            pacote = 0;
+        }
+    }
+    double *retorno = (double *)malloc(2 * sizeof(double));
+
+    retorno[0] = pacote;
+    retorno[1] = (i - cont);
+    return retorno; //  1/intervalo = qtd de pacotes por segundo  -> 8000B/50pacotes -> cada pacote 160byte
+    // se tem duas chamadas simultaneas, o intervalo cai pela metade, para 4 simult. = 0.005
+    // update: independente do numero de chamadas, o peso vai ser sempre 160 Bytes (primeiro item da tupla), o segundo item da tupla é 0.02/qtd_simultaneas (que é o intervalo entre pacotes que vai ser somado na divisao do calculo da chegada na func reoslve
 }
 
 /*
@@ -226,6 +249,8 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
 
     // Variáveis utilizadas para captação de resultados da simulação
     double chegada, servico, coleta = TAXA_CHEGADA;
+
+    double *retorno_chamada;
     // Variaǘel necessária para soma de tempo de serviço da simulação
     double soma_tempo_servico = 0.0, tempo_servico = 0.0, atraso_transmissao = 0.0;
 
@@ -263,11 +288,12 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
     // EDIT: taxas médias do link para cada ocupação, quanto maior a largura, menos ocupado
     double link[4] = {73500, 55125, 46421, 44545};
     // EDIT2: em média 17280Kb em 105 segundos somente de chamadas, ou seja, 164.5714286Kbps ->  20571.428575 Bytes/s -> somado com a navegacao = 20571.428575 + 44100 = 64671.428575 Bytes/s
-    double new_link[4] = {107785.714291667, 80839.28571875, 68075.1879736842, 65324.6753282828};
-
+    // double new_link[4] = {107785.714291667, 80839.28571875, 68075.1879736842, 65324.6753282828};
+    double new_link[4] = {126833.33333333334, 95125.0, 80105.26315789475, 76868.68686868687}; //<- feito sem considerar os 15 primeiros segundos ocioso do desenho de 105. considerei as 4 ligações simultaneas medias
     // Looping de simulação
     while (tempo_decorrido <= tempo_simulacao)
     {
+
         /*
          * Cálculo do tempo decorrido com base na fila.
          * Eventualmente, fila == 0 (esta ocioso), onde o servico pode ser desprezado
@@ -275,9 +301,11 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
          * Um caso a mais deve ser tratando dentro da cadeia de ifs (coleta)
          */
         tempo_decorrido = !fila ? minimo(chegada, coleta) : minimo(minimo(chegada, coleta), servico);
+        retorno_chamada = calcula_chamada(tempo_decorrido, chamada);
         // Se chegou
         if (tempo_decorrido == chegada)
         {
+
             if (!fila)
             {
                 double L = calculo_l(), log_aleatorio = log(aleatorio());
@@ -286,7 +314,7 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
                 if (percentual_calculado == (float)0.006000)
                 {
                     // printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
-                    atraso_transmissao = L + calcula_chamada(tempo_decorrido, chamada) / new_link[0]; //numerador deve ser bytes de ligacao OU bytes de web (calculado pela probabilidade de cada um)(qtd_pacotes_web/qtd_pacotes_web+ligacao) //vai dar 300 //printar lambda deve dar 300
+                    atraso_transmissao = retorno_chamada[0] / new_link[0]; // numerador deve ser bytes de ligacao OU bytes de web (calculado pela probabilidade de cada um)(qtd_pacotes_web/qtd_pacotes_web+ligacao) //vai dar 300 //printar lambda deve dar 300
                     // seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
                 }
                 else if (percentual_calculado == (float)0.008000)
@@ -294,21 +322,21 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
                     // printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
 
                     // seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
-                    atraso_transmissao = L + calcula_chamada(tempo_decorrido, chamada) / new_link[1];
+                    atraso_transmissao = retorno_chamada[0] / new_link[1];
                 }
                 else if (percentual_calculado == (float)0.009500)
                 {
                     // printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
 
                     // seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
-                    atraso_transmissao = L + calcula_chamada(tempo_decorrido, chamada) / new_link[2];
+                    atraso_transmissao = retorno_chamada[0] / new_link[2];
                 }
                 else if (percentual_calculado == (float)0.009900)
                 {
                     // printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
 
                     // seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
-                    atraso_transmissao = L + calcula_chamada(tempo_decorrido, chamada) / new_link[3];
+                    atraso_transmissao = retorno_chamada[0] / new_link[3];
                 }
 
                 //  printf("atraso: %.20f", atraso_transmissao);
@@ -320,11 +348,13 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
             fila++;
             max_fila = fila > max_fila ? fila : max_fila;
 
-            //UPDATE 5:     intervalo_medio_chegada = 1/(100+50*qtd_chamadas) -> se só tem uma ligação acontecendo a qtd_pacots_ligacao = 1/0.02n
-            //intervalo_medio_chegada = 1 / qtd_pacotes
-            //qtd_pacotes = (100 + n_chamadas * 50)
+            // UPDATE 5:     intervalo_medio_chegada = 1/(100+50*qtd_chamadas) -> se só tem uma ligação acontecendo a qtd_pacots_ligacao = 1/0.02n
+            // intervalo_medio_chegada = 1 / qtd_pacotes
+            // qtd_pacotes = (100 + n_chamadas * 50)
+            intervalo_medio_chegada = 1 / (100 + retorno_chamada[1] * 50);
+
             chegada = tempo_decorrido + (-1.0 / (1.0 / intervalo_medio_chegada)) * log(aleatorio());
-            chegada = tempo_decorrido + (-1.0 / (1.0 / intervalo_medio_chegada+//retorno com intervalo_medio_chamada)) * log(aleatorio()); independente do tipo de pacote
+            // chegada = tempo_decorrido + (-1.0 / (1.0 / intervalo_medio_chegada+//retorno com intervalo_medio_chamada)) * log(aleatorio()); independente do tipo de pacote
 
             // Cálculos de Little
             e_n.soma_areas += (tempo_decorrido - e_n.tempo_anterior) * e_n.no_eventos;
@@ -339,6 +369,7 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
         // Se saiu
         else if (tempo_decorrido == servico)
         {
+
             // Decréscimo da fila
             fila--;
 
@@ -351,7 +382,7 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
                 {
                     // printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
 
-                    atraso_transmissao = L + calcula_chamada(tempo_decorrido, chamada) / new_link[0];
+                    atraso_transmissao = retorno_chamada[0] / new_link[0];
                     // seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
                 }
                 else if (percentual_calculado == (float)0.008000)
@@ -359,21 +390,21 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
                     // printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
 
                     // seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
-                    atraso_transmissao = L + calcula_chamada(tempo_decorrido, chamada) / new_link[1];
+                    atraso_transmissao = retorno_chamada[0] / new_link[1];
                 }
                 else if (percentual_calculado == (float)0.009500)
                 {
                     // printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
 
                     // seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
-                    atraso_transmissao = L + calcula_chamada(tempo_decorrido, chamada) / new_link[2];
+                    atraso_transmissao = retorno_chamada[0] / new_link[2];
                 }
                 else if (percentual_calculado == (float)0.009900)
                 {
                     // printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
 
                     // seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
-                    atraso_transmissao = L + calcula_chamada(tempo_decorrido, chamada) / new_link[3];
+                    atraso_transmissao = retorno_chamada[0] / new_link[3];
                 }
                 // printf("atraso: %.20f", atraso_transmissao);
                 servico = tempo_decorrido + atraso_transmissao;
@@ -406,8 +437,8 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
             double e_n_final = e_n.soma_areas / tempo_decorrido;
             double e_w_final = (e_w_chegada.soma_areas - e_w_saida.soma_areas) / e_w_chegada.no_eventos;
             double lambda = e_w_chegada.no_eventos / tempo_decorrido;
-            printf("%f\n", lambda);
-            // Fim dos cálculos necessários para os parâmetros listados na atividade
+            // printf("%f\n", lambda);
+            //  Fim dos cálculos necessários para os parâmetros listados na atividade
 
             // Coleta se acrescenta como 100, identificada como 100 segundos
             coleta += TAXA_CHEGADA;
@@ -558,14 +589,14 @@ void main()
      * Iniciamos as structs do array de gráficos e a enviamos por referência para "resolve"
      * A função "resolve" irá preencher os dados de cada gráfico
      */
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 1; i++)
     {
         inicia_grafico(&graficos[i]);
         resolve(taxas[i], &graficos[i], &chamada);
     }
 
-    // cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 0.0000009, "E[N]", "left top");
-    // cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 0.0000009, "E[W]", "left top");
-    // cria_grafico(graficos, "Ocupações conforme o tempo", "Ocupacao", "Tempo (s)", 2000, 0.0000009, "Ocupacao", "right bot");
-    // cria_grafico(graficos, "Erro de Little para diferentes ocupações", "Little", "Tempo (s)", 2000, 0.0000000090, "Little", "left top");
+    cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 10, "E[N]", "left top");
+    cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 0.1, "E[W]", "left top");
+    cria_grafico(graficos, "Ocupações conforme o tempo", "Ocupacao", "Tempo (s)", 2000, 0.025, "Ocupacao", "right bot");
+    cria_grafico(graficos, "Erro de Little para diferentes ocupações", "Little", "Tempo (s)", 2000, 0.0000000090, "Little", "left top");
 }
