@@ -155,7 +155,7 @@ unsigned long int gera_inicio_chamada_v2()
 
 void gera_chamadas(chamada *g)
 {
-    for (int i = 1; i < TEMPO_SIMULACAO; i++)
+    for (int i = 1; i < 2110; i++)
     {
         g->tempo_inicio[i] = g->tempo_inicio[i - 1] + 0.02 + gera_inicio_chamada_v2();
         g->duracao[i] = (60 * log(aleatorio())) * -1;
@@ -268,7 +268,6 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
          * Um caso a mais deve ser tratando dentro da cadeia de ifs (coleta)
          */
         tempo_decorrido = !fila ? minimo(chegada, coleta) : minimo(minimo(chegada, coleta), servico);
-
         // Se chegou
         if (tempo_decorrido == chegada)
         {
@@ -279,30 +278,30 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
                 // EDIT: calculo do atraso de transmissão
                 if (percentual_calculado == (float)0.006000)
                 {
-                    //printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
-                    atraso_transmissao = L  + calcula_chamada(tempo_decorrido, chamada) / new_link[0];
+                    // printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
+                    atraso_transmissao = L + calcula_chamada(tempo_decorrido, chamada) / new_link[0];
                     // seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
                 }
                 else if (percentual_calculado == (float)0.008000)
                 {
-                    //printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
+                    // printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
 
                     // seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
                     atraso_transmissao = L + calcula_chamada(tempo_decorrido, chamada) / new_link[1];
                 }
                 else if (percentual_calculado == (float)0.009500)
                 {
-                    //printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
+                    // printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
 
                     // seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
-                    atraso_transmissao = L / new_link[2];
+                    atraso_transmissao = L + calcula_chamada(tempo_decorrido, chamada) / new_link[2];
                 }
                 else if (percentual_calculado == (float)0.009900)
                 {
-                    //printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
+                    // printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
 
                     // seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
-                    atraso_transmissao = L / new_link[3];
+                    atraso_transmissao = L + calcula_chamada(tempo_decorrido, chamada) / new_link[3];
                 }
 
                 //  printf("atraso: %.20f", atraso_transmissao);
@@ -339,31 +338,31 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
                 // EDIT: calculo do atraso de transmissão
                 if (percentual_calculado == (float)0.006000)
                 {
-                    //printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
+                    // printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
 
-                    atraso_transmissao = L / new_link[0];
+                    atraso_transmissao = L + calcula_chamada(tempo_decorrido, chamada) / new_link[0];
                     // seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
                 }
                 else if (percentual_calculado == (float)0.008000)
                 {
-                    //printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
+                    // printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
 
                     // seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
-                    atraso_transmissao = L / new_link[1];
+                    atraso_transmissao = L + calcula_chamada(tempo_decorrido, chamada) / new_link[1];
                 }
                 else if (percentual_calculado == (float)0.009500)
                 {
-                    //printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
+                    // printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
 
                     // seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
-                    atraso_transmissao = L / new_link[2];
+                    atraso_transmissao = L + calcula_chamada(tempo_decorrido, chamada) / new_link[2];
                 }
                 else if (percentual_calculado == (float)0.009900)
                 {
-                    //printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
+                    // printf("%f\n", calcula_chamada(tempo_decorrido, chamada));
 
                     // seria  atraso_transmissao = L + ligacoes/ link[0]; //ligações sendo o retorno da função que traz qts bytes de ligação no tempo_decorrido atual
-                    atraso_transmissao = L / new_link[3];
+                    atraso_transmissao = L + calcula_chamada(tempo_decorrido, chamada) / new_link[3];
                 }
                 // printf("atraso: %.20f", atraso_transmissao);
                 servico = tempo_decorrido + atraso_transmissao;
@@ -547,14 +546,14 @@ void main()
      * Iniciamos as structs do array de gráficos e a enviamos por referência para "resolve"
      * A função "resolve" irá preencher os dados de cada gráfico
      */
-    for (int i = 0; i < 1; i++)
+    for (int i = 0; i < 4; i++)
     {
         inicia_grafico(&graficos[i]);
         resolve(taxas[i], &graficos[i], &chamada);
     }
 
-    // cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 10, "E[N]", "left top");
-    // cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 0.1, "E[W]", "left top");
-    // cria_grafico(graficos, "Ocupações conforme o tempo", "Ocupacao", "Tempo (s)", 2000, 0.025, "Ocupacao", "right bot");
-    // cria_grafico(graficos, "Erro de Little para diferentes ocupações", "Little", "Tempo (s)", 2000, 0.0000000090, "Little", "left top");
+    cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 10, "E[N]", "left top");
+    cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 0.1, "E[W]", "left top");
+    cria_grafico(graficos, "Ocupações conforme o tempo", "Ocupacao", "Tempo (s)", 2000, 0.025, "Ocupacao", "right bot");
+    cria_grafico(graficos, "Erro de Little para diferentes ocupações", "Little", "Tempo (s)", 2000, 0.0000000090, "Little", "left top");
 }
