@@ -479,9 +479,12 @@ void cria_grafico(grafico *graficos, char *titulo_grafico, char *eixo_y, char *e
     {
         for (int i = 0; i < 4; i++)
         {
-            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO / 4; j++)
+            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO; j++)
             {
-                printf("    %lF %.20lF \n", graficos[i].tempo[j], graficos[i].little[j]);
+                if(graficos[i].tempo[j] != 0 && graficos[i].little[j] != 0){
+                    printf("    %lF %.20lF \n", graficos[i].tempo[j], graficos[i].little[j]);
+                }
+                
             }
             printf("e \n");
         }
@@ -490,9 +493,11 @@ void cria_grafico(grafico *graficos, char *titulo_grafico, char *eixo_y, char *e
     {
         for (int i = 0; i < 4; i++)
         {
-            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO / 4; j++)
+            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO; j++)
             {
+                if(graficos[i].tempo[j] != 0 && graficos[i].e_n_final[j] != 0){
                 printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].e_n_final[j]);
+                }
             }
             printf("e \n");
         }
@@ -501,9 +506,11 @@ void cria_grafico(grafico *graficos, char *titulo_grafico, char *eixo_y, char *e
     {
         for (int i = 0; i < 4; i++)
         {
-            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO / 4; j++)
+            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO; j++)
             {
-                printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].e_w_final[j]);
+                if(graficos[i].tempo[j] != 0 && graficos[i].e_w_final[j] != 0){
+                    printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].e_w_final[j]);
+                }
             }
             printf("e \n");
         }
@@ -512,9 +519,12 @@ void cria_grafico(grafico *graficos, char *titulo_grafico, char *eixo_y, char *e
     {
         for (int i = 0; i < 4; i++)
         {
-            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO / 4; j++)
+            for (int j = 0; j < TEMPO_SIMULACAO_EM_INTERVALO; j++)
             {
-                printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].ocupacao[j]);
+                if(graficos[i].tempo[j] != 0 && graficos[i].ocupacao[j] != 0){
+                    printf("    %lF %lF \n", graficos[i].tempo[j], graficos[i].ocupacao[j]);
+                }
+                
             }
             printf("e \n");
         }
@@ -581,7 +591,7 @@ void main()
         resolve(taxas[i], &graficos[i], &chamada);
     }
 
-    cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 0.9, "E[N]", "left top");
+    cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 400, "E[N]", "left top");
     cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 4, "E[W]", "left top");
     cria_grafico(graficos, "Ocupações conforme o tempo", "Ocupacao", "Tempo (s)", 2000, 0.025, "Ocupacao", "right bot");
     cria_grafico(graficos, "Erro de Little para diferentes ocupações", "Little", "Tempo (s)", 2000, 0.0000000199, "Little", "left top");
