@@ -146,23 +146,22 @@ unsigned long int gera_duracao_chamada()
     return rand() % TEMPO_SIMULACAO_EM_INTERVALO + 60;
 }
 
-unsigned long int gera_inicio_chamada_v2()
-{
-    double rand_num = 0;
-    rand_num = rand() % 31 - 7;
-    rand_num = (rand_num * rand_num * rand_num) / 1000;
-    return rand_num + 15;
-}
-
 void gera_chamadas(chamada *g)
 {
+    float aux = 0;
+    float cont = 0;
     for (int i = 1; i < 2400; i++) // quantos inicios (da geracao aleatoria )são menores que 36000
-    {
-        float tempo_inicio = g->tempo_inicio[i - 1] + gera_inicio_chamada_v2();
+    {   
+        aux = 15*log(aleatorio())*-1; //numero aleatorio que tende a 15 e é positivo
+        cont+=aux; //soma pra fazer média
+
+        float tempo_inicio = g->tempo_inicio[i - 1] + aux; //soma-se um valor aleatorio que tende a 15 ao tempo anterior (cada chamada se inicia em media 15 segundos)
         g->tempo_inicio[i] = tempo_inicio;
         g->duracao[i] = (60 * log(aleatorio())) * -1;
         g->tamanho[i] = g->duracao[i] * 64;
     }
+    
+    //printf("Tempo medio de inicio: %f\n", cont/2400); //mostra média
 }
 
 double calculo_l()
@@ -584,8 +583,8 @@ void main()
         resolve(taxas[i], &graficos[i], &chamada);
     }
 
-    cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 0.9, "E[N]", "left top");
-    cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 0.9, "E[W]", "left top");
-    cria_grafico(graficos, "Ocupações conforme o tempo", "Ocupacao", "Tempo (s)", 2000, 0.025, "Ocupacao", "right bot");
-    cria_grafico(graficos, "Erro de Little para diferentes ocupações", "Little", "Tempo (s)", 2000, 0.0000000199, "Little", "left top");
+    //cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 0.9, "E[N]", "left top");
+    //cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 0.9, "E[W]", "left top");
+    //cria_grafico(graficos, "Ocupações conforme o tempo", "Ocupacao", "Tempo (s)", 2000, 0.025, "Ocupacao", "right bot");
+    //cria_grafico(graficos, "Erro de Little para diferentes ocupações", "Little", "Tempo (s)", 2000, 0.0000000199, "Little", "left top");
 }
