@@ -196,25 +196,15 @@ double *calcula_chamada(float tempo_decorrido, chamada *chamada)
     // Quantos pacotes de rede existem por segundo?? = 100
     // Quantos pacotes de ligação existem por segundo?? = 200 1 / 0.02, média 4 -> 50 * 4 = 200
 
-    while (chamada->tempo_inicio[i] <= tempo_decorrido)
+    while (chamada->tempo_inicio[i] <= tempo_decorrido) // se chamada foi iniciada antes do tempo de coleta
     {
+        if (!(chamada->tempo_inicio[i] + chamada->duracao[i] <= tempo_decorrido)){ //e o termino da chamada aconteceu antes ou no tempo de coleta, ou seja, a ligação ainda esta ativa
+            cont++;
+        }
         i++;
     }
 
-    for (j = 0; j < i; j++)
-    {
-        /*
-            * <= pois no último instante não pode enviar pacote se no instante inicial
-            também enviou pois dessa forma seria enviado ('-' <- isso é um pokerface) ou seria contado 1s a mais do q a duração devida
-            * Conta quantas das chamadas iniciadas antes ou no tempo de consulta já foram finalizadas
-        */
-        if (chamada->tempo_inicio[j] + chamada->duracao[j] <= tempo_decorrido)
-        {
-            cont++;
-        }
-    }
-
-    if (aleatorio() <= 0.333)
+    if (aleatorio() < 0.333)
     {
         pacote = calculo_l();
     }
@@ -232,7 +222,7 @@ double *calcula_chamada(float tempo_decorrido, chamada *chamada)
     double *retorno = (double *)malloc(2 * sizeof(double));
 
     retorno[0] = pacote;
-    retorno[1] = (i - cont);
+    retorno[1] = cont;
     return retorno; //  1/intervalo = qtd de pacotes por segundo  -> 8000B/50pacotes -> cada pacote 160byte
     // se tem duas chamadas simultaneas, o intervalo cai pela metade, para 4 simult. = 0.005
     // update: independente do numero de chamadas, o peso vai ser sempre 160 Bytes (primeiro item da tupla), o segundo item da tupla é 0.02/qtd_simultaneas (que é o intervalo entre pacotes que vai ser somado na divisao do calculo da chegada na func reoslve
@@ -276,7 +266,7 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
     // Definindo o intervalo de chegada como 5/s
     intervalo_medio_chegada = INTERVALO_MEDIO_CHEGADA;
 
-    // Taxas conforme cálculo para 80%, 90% 95% e 99%
+    // Taxas conforme cálculo para 60%, 80% 95% e 99%
     tempo_medio_servico = percentual_calculado;
 
     // Gerando o tempo de chegada da primeira requisicao.
@@ -588,7 +578,7 @@ void main()
      * Iniciamos as structs do array de gráficos e a enviamos por referência para "resolve"
      * A função "resolve" irá preencher os dados de cada gráfico
      */
-    for (int i = 0; i < 4; i++)
+    for (int i = 2; i < 3; i++)
     {
         inicia_grafico(&graficos[i]);
         resolve(taxas[i], &graficos[i], &chamada);
