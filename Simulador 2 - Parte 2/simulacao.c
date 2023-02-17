@@ -288,8 +288,7 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
     // EDIT: taxas médias do link para cada ocupação, quanto maior a largura, menos ocupado
     double link[4] = {73500, 55125, 46421, 44545};
     // EDIT2: em média 17280Kb em 105 segundos somente de chamadas, ou seja, 164.5714286Kbps ->  20571.428575 Bytes/s -> somado com a navegacao = 20571.428575 + 44100 = 64671.428575 Bytes/s
-     double new_link[4] = {107785.714291667, 80839.28571875, 68075.1879736842, 65324.6753282828};
-    //double new_link[4] = {126833.33333333334, 95125.0, 80105.26315789475, 76868.68686868687}; //<- feito sem considerar os 15 primeiros segundos ocioso do desenho de 105. considerei as 4 ligações simultaneas medias
+    double new_link[4] = {126833.33333333334, 95125.0, 80105.26315789475, 76868.68686868687}; //<- feito sem considerar os 15 primeiros segundos ocioso do desenho de 105. considerei as 4 ligações simultaneas medias    //double new_link[4] = {126833.33333333334, 95125.0, 80105.26315789475, 76868.68686868687}; //<- feito sem considerar os 15 primeiros segundos ocioso do desenho de 105. considerei as 4 ligações simultaneas medias
     // Looping de simulação
     while (tempo_decorrido <= tempo_simulacao)
     {
@@ -595,8 +594,8 @@ void main()
         resolve(taxas[i], &graficos[i], &chamada);
     }
 
-    cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 10, "E[N]", "left top");
-    cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 0.1, "E[W]", "left top");
+    cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 0.9, "E[N]", "left top");
+    cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 0.9, "E[W]", "left top");
     cria_grafico(graficos, "Ocupações conforme o tempo", "Ocupacao", "Tempo (s)", 2000, 0.025, "Ocupacao", "right bot");
-    cria_grafico(graficos, "Erro de Little para diferentes ocupações", "Little", "Tempo (s)", 2000, 0.0000000090, "Little", "left top");
+    cria_grafico(graficos, "Erro de Little para diferentes ocupações", "Little", "Tempo (s)", 2000, 0.0000000199, "Little", "left top");
 }
