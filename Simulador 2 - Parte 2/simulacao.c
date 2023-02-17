@@ -28,7 +28,6 @@ typedef struct chamada
 {
     float tempo_inicio[TEMPO_SIMULACAO];
     float duracao[TEMPO_SIMULACAO];
-    float tamanho[TEMPO_SIMULACAO];
 } chamada;
 
 /*
@@ -127,12 +126,10 @@ void inicia_chamada(chamada *g)
 {
     g->tempo_inicio[0] = (15 * log(aleatorio())) * -1;
     g->duracao[0] = (60 * log(aleatorio())) * -1;
-    g->tamanho[0] = g->duracao[0] * 64;
-    for (int i = 1; i < 2400; i++)
+    for (int i = 1; i < 3000; i++)
     {
         g->tempo_inicio[i] = 0;
         g->duracao[i] = 0;
-        g->tamanho[i] = 0;
     }
 }
 
@@ -150,18 +147,18 @@ void gera_chamadas(chamada *g)
 {
     float aux = 0;
     float cont = 0;
-    for (int i = 1; i < 2400; i++) // quantos inicios (da geracao aleatoria )são menores que 36000
+    for (int i = 1; i < 3000; i++) //deve gerar em média 2400 ligações
     {   
         aux = 15*log(aleatorio())*-1; //numero aleatorio que tende a 15 e é positivo
-        cont+=aux; //soma pra fazer média
 
         float tempo_inicio = g->tempo_inicio[i - 1] + aux; //soma-se um valor aleatorio que tende a 15 ao tempo anterior (cada chamada se inicia em media 15 segundos)
+        if (tempo_inicio > 36000) cont++;
+
         g->tempo_inicio[i] = tempo_inicio;
         g->duracao[i] = (60 * log(aleatorio())) * -1;
-        g->tamanho[i] = g->duracao[i] * 64;
     }
-    
-    //printf("Tempo medio de inicio: %f\n", cont/2400); //mostra média
+
+    //printf("Inicios de ligações válidas: %f\n", 3000-cont); //deve dar em torno de 2400
 }
 
 double calculo_l()
@@ -203,7 +200,7 @@ double *calcula_chamada(float tempo_decorrido, chamada *chamada)
         i++;
     }
 
-    if (aleatorio() < 0.333)
+    if (aleatorio() < 0.33333333)
     {
         pacote = calculo_l();
     }
@@ -215,7 +212,7 @@ double *calcula_chamada(float tempo_decorrido, chamada *chamada)
         }
         else
         {
-            pacote = 0;
+            pacote = calculo_l(); //se nao houverem ligações retorna um pacote web mesmo
         }
     }
     double *retorno = (double *)malloc(2 * sizeof(double));
@@ -262,7 +259,7 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
     // Defininindo o tempo de simulação conforme o solicitado na atividade
     tempo_simulacao = TEMPO_SIMULACAO;
 
-    // Definindo o intervalo de chegada como 5/s
+    // Definindo o intervalo de chegada 100/s
     intervalo_medio_chegada = INTERVALO_MEDIO_CHEGADA;
 
     // Taxas conforme cálculo para 60%, 80% 95% e 99%
@@ -277,7 +274,7 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
     // EDIT: taxas médias do link para cada ocupação, quanto maior a largura, menos ocupado
     double link[4] = {73500, 55125, 46421, 44545};
     // EDIT2: em média 17280Kb em 105 segundos somente de chamadas, ou seja, 164.5714286Kbps ->  20571.428575 Bytes/s -> somado com a navegacao = 20571.428575 + 44100 = 64671.428575 Bytes/s
-    double new_link[4] = {126833.33333333334, 95125.0, 80105.26315789475, 76868.68686868687}; //<- feito sem considerar os 15 primeiros segundos ocioso do desenho de 105. considerei as 4 ligações simultaneas medias    //double new_link[4] = {126833.33333333334, 95125.0, 80105.26315789475, 76868.68686868687}; //<- feito sem considerar os 15 primeiros segundos ocioso do desenho de 105. considerei as 4 ligações simultaneas medias
+    double new_link[4] = {126833.33333333334, 95125.0, 80105.26315789475, 76868.68686868687}; //<- 44100 (web) + 4(media de chamadas simultaneas) * 8000 ("peso" de cada ligação em bytes) = 44100 + 32000 = 76100 Bytes/s. Para 60% -> 76100 / 0.6 = 126833.33333333334 Bytes/s
     // Looping de simulação
     while (tempo_decorrido <= tempo_simulacao)
     {
@@ -290,6 +287,7 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
          */
         tempo_decorrido = !fila ? minimo(chegada, coleta) : minimo(minimo(chegada, coleta), servico);
         retorno_chamada = calcula_chamada(tempo_decorrido, chamada);
+        //printf("pacote: %f qtd_ligacoes: %f\n", retorno_chamada[0], retorno_chamada[1]);
         // Se chegou
         if (tempo_decorrido == chegada)
         {
@@ -425,7 +423,7 @@ void resolve(float percentual_calculado, grafico *grafico, chamada *chamada)
             double e_n_final = e_n.soma_areas / tempo_decorrido;
             double e_w_final = (e_w_chegada.soma_areas - e_w_saida.soma_areas) / e_w_chegada.no_eventos;
             double lambda = e_w_chegada.no_eventos / tempo_decorrido;
-            // printf("%f\n", lambda);
+            //printf("%f\n", lambda);
             //  Fim dos cálculos necessários para os parâmetros listados na atividade
 
             // Coleta se acrescenta como 100, identificada como 100 segundos
@@ -577,14 +575,14 @@ void main()
      * Iniciamos as structs do array de gráficos e a enviamos por referência para "resolve"
      * A função "resolve" irá preencher os dados de cada gráfico
      */
-    for (int i = 2; i < 3; i++)
+    for (int i = 0; i < 4; i++)
     {
         inicia_grafico(&graficos[i]);
         resolve(taxas[i], &graficos[i], &chamada);
     }
 
-    //cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 0.9, "E[N]", "left top");
-    //cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 0.9, "E[W]", "left top");
-    //cria_grafico(graficos, "Ocupações conforme o tempo", "Ocupacao", "Tempo (s)", 2000, 0.025, "Ocupacao", "right bot");
-    //cria_grafico(graficos, "Erro de Little para diferentes ocupações", "Little", "Tempo (s)", 2000, 0.0000000199, "Little", "left top");
+    cria_grafico(graficos, "Tempo médio de fila para diferentes ocupações", "E[N]", "Tempo (s)", 2000, 0.9, "E[N]", "left top");
+    cria_grafico(graficos, "Tempo médio de espera para diferentes ocupações", "E[W]", "Tempo (s)", 2000, 4, "E[W]", "left top");
+    cria_grafico(graficos, "Ocupações conforme o tempo", "Ocupacao", "Tempo (s)", 2000, 0.025, "Ocupacao", "right bot");
+    cria_grafico(graficos, "Erro de Little para diferentes ocupações", "Little", "Tempo (s)", 2000, 0.0000000199, "Little", "left top");
 }
