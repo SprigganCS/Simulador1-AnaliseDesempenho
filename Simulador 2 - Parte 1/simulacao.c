@@ -119,15 +119,15 @@ double calculo_l()
 {
     double valor = aleatorio();
 
-    if (valor <= 0.1)
+    if (valor < 0.1)
     {
         return 1500;
     }
-    else if (valor <= 0.5)
+    else if (valor < 0.5)
     {
         return 40;
     }
-    else if (valor <= 1)
+    else if (valor < 1)
     {
         return 550;
     }
